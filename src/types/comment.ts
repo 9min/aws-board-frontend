@@ -1,8 +1,14 @@
+export interface CommentAuthor {
+  id: number
+  nickname: string
+}
+
 export interface Comment {
   id: number
   postId: number
   authorId: number
   authorNickname: string
+  author?: CommentAuthor
   content: string
   createdAt: string
   updatedAt: string
