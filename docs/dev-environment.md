@@ -5,7 +5,7 @@
 | 도구 | 최소 버전 | 비고 |
 |------|----------|------|
 | Node.js | >= 20 | LTS 권장 |
-| npm | >= 10 | Node.js 20과 함께 설치됨 |
+| pnpm | >= 9 | CI/CD와 동일한 패키지 매니저. `npm i -g pnpm`으로 설치 |
 
 ## 환경변수 설정
 
@@ -30,8 +30,7 @@ VITE_API_BASE_URL=http://3.38.166.223:3000
 | 환경 | API_BASE_URL | 관리 방식 |
 |------|-------------|----------|
 | 로컬 | `http://3.38.166.223:3000` (또는 로컬 백엔드) | `.env.local` |
-| Preview | 스테이징 백엔드 URL | Vercel 환경변수 |
-| Production | 프로덕션 백엔드 URL | Vercel 환경변수 |
+| Production | 프로덕션 백엔드 URL | GitHub Secrets (`VITE_API_BASE_URL`) |
 
 ## IDE 설정
 
@@ -96,24 +95,27 @@ VITE_API_BASE_URL=http://3.38.166.223:3000
 # 1. .env.local 파일 확인 (없으면 .env.example 복사 후 값 입력)
 cp .env.example .env.local
 
-# 2. 의존성 설치
-npm install
+# 2. 의존성 설치 (pnpm 사용)
+pnpm install
 
 # 3. 개발 서버 실행
-npm run dev
+pnpm dev
 ```
 
-### package.json scripts 예제
+### package.json scripts
 
 ```json
 {
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "biome check --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "test": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
   }
 }
 ```

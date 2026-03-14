@@ -69,8 +69,14 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
 
     if (status === 401) {
-      tokenStorage.clearToken();
-      window.location.href = "/login";
+      tokenStorage.clearTokens();
+      // 로그인/회원가입 페이지에서는 리다이렉트 불필요
+      const isAuthRoute = ["/login", "/register"].some((path) =>
+        window.location.pathname.startsWith(path),
+      );
+      if (!isAuthRoute) {
+        window.location.href = "/login";
+      }
     }
 
     return Promise.reject(error);
@@ -108,22 +114,34 @@ export async function getPostById(id: number): Promise<Post> {
 ### 앱 에러 타입 및 헬퍼
 
 ```ts
-// src/types/error.ts
+// src/types/common.ts — AppError는 별도 파일이 아닌 common.ts에 정의된다.
 export interface AppError {
   code: string;
   message: string;
-  details?: string;
+  details?: Record<string, string[]>;  // string이 아닌 Record<string, string[]>
 }
 
 // src/utils/error.ts
 import axios from "axios";
+import type { AppError } from "@/types/common";
 
 export function createAppError(
   code: string,
   message: string,
-  details?: string,
+  details?: Record<string, string[]>,
 ): AppError {
   return { code, message, details };
+}
+
+export function isAppError(error: unknown): error is AppError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    "message" in error &&
+    typeof (error as AppError).code === "string" &&
+    typeof (error as AppError).message === "string"
+  );
 }
 
 export function getErrorMessage(error: unknown): string {
@@ -132,17 +150,24 @@ export function getErrorMessage(error: unknown): string {
   return "알 수 없는 오류가 발생했습니다.";
 }
 
-export function isAxiosError(error: unknown) {
-  return axios.isAxiosError(error);
-}
-
-function isAppError(error: unknown): error is AppError {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    "message" in error
-  );
+export function handleApiError(error: unknown): AppError {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
+    const serverMessage = (error.response?.data as { message?: string })?.message;
+    if (!status) {
+      return createAppError("NETWORK_ERROR", serverMessage ?? "네트워크 오류가 발생했습니다.");
+    }
+    // HTTP 상태 코드를 내부 에러 코드로 변환
+    const codeMap: Record<number, string> = {
+      400: "BAD_REQUEST", 401: "UNAUTHORIZED", 403: "FORBIDDEN",
+      404: "NOT_FOUND", 409: "CONFLICT", 422: "VALIDATION_ERROR",
+      429: "TOO_MANY_REQUESTS", 500: "SERVER_ERROR",
+    };
+    const code = codeMap[status] ?? "UNKNOWN_ERROR";
+    return createAppError(code, serverMessage ?? "오류가 발생했습니다.");
+  }
+  if (isAppError(error)) return error;
+  return createAppError("UNKNOWN_ERROR", "알 수 없는 오류가 발생했습니다.");
 }
 ```
 
@@ -258,11 +283,11 @@ function PostDetail({ id }: { id: number }) {
 앱 전체에서 일관된 에러 형식을 사용한다:
 
 ```ts
-// 앱 에러 (서비스 → 컴포넌트)
+// 앱 에러 (서비스 → 컴포넌트) — src/types/common.ts에 정의
 interface AppError {
   code: string;
-  message: string;       // 사용자에게 표시할 메시지
-  details?: string;      // 추가 정보 (선택)
+  message: string;                       // 사용자에게 표시할 메시지
+  details?: Record<string, string[]>;    // 필드별 검증 오류 등 추가 정보 (선택)
 }
 ```
 

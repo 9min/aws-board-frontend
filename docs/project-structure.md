@@ -9,23 +9,42 @@
 ├── .vscode/                    # VSCode 설정 (settings.json, extensions.json 등)
 ├── .github/                    # GitHub Actions 워크플로우
 │   └── workflows/
+│       └── ci.yml              # CI/CD 파이프라인 (lint → type-check → test → build → deploy)
 ├── src/
 │   ├── app/                    # 앱 진입점, 라우팅 설정
+│   │   ├── router.ts           # TanStack Router 인스턴스
+│   │   ├── routeTree.gen.ts    # 자동 생성 라우트 트리 (수정 금지)
+│   │   └── routes/             # 파일 기반 라우트 (TanStack Router)
+│   │       ├── __root.tsx      # 루트 레이아웃
+│   │       ├── index.tsx       # / (홈)
+│   │       ├── login.tsx       # /login
+│   │       ├── register.tsx    # /register
+│   │       └── posts/
+│   │           ├── new.tsx     # /posts/new
+│   │           └── $postId/
+│   │               ├── index.tsx  # /posts/:postId
+│   │               └── edit.tsx   # /posts/:postId/edit
 │   ├── components/             # 컴포넌트
 │   │   ├── ui/                 # 기본 UI 컴포넌트 (Button, Input 등)
-│   │   ├── layout/             # 레이아웃 컴포넌트 (Header, Footer 등)
+│   │   ├── layout/             # 레이아웃 컴포넌트 (Header 등)
 │   │   └── feature/            # 기능별 컴포넌트
+│   │       ├── auth/           # 인증 관련 (LoginForm, RegisterForm)
+│   │       ├── post/           # 게시글 관련 (PostCard, PostForm)
+│   │       ├── comment/        # 댓글 관련 (CommentList, CommentForm)
+│   │       └── file/           # 파일 업로드 관련 (FileUpload)
+│   ├── contexts/               # React Context (AuthContext)
 │   ├── hooks/                  # 커스텀 훅
-│   ├── pages/                  # 페이지 컴포넌트
 │   ├── lib/                    # 외부 라이브러리 설정
 │   │   ├── apiClient.ts        # axios 인스턴스 (baseURL, 인터셉터)
-│   │   └── tokenStorage.ts     # JWT 토큰 저장/조회
+│   │   ├── tokenStorage.ts     # JWT 토큰 저장/조회
+│   │   └── queryClient.ts      # TanStack Query 클라이언트 설정
 │   ├── services/               # REST API 호출 함수 (도메인별 분리)
-│   ├── stores/                 # 상태 관리 (상세: state-management.md 참조)
 │   ├── types/                  # TypeScript 타입 정의 (DTO, 응답 타입 등)
 │   ├── utils/                  # 유틸리티 함수
-│   └── constants/              # 상수 정의 (API 엔드포인트 등)
-├── tests/                      # 테스트 파일
+│   ├── constants/              # 상수 정의 (API 엔드포인트 등)
+│   ├── assets/                 # 정적 에셋 (이미지 등)
+│   └── test/
+│       └── setup.ts            # Vitest 전역 설정
 ├── docs/                       # 프로젝트 문서
 ├── public/                     # 정적 파일
 ├── .env.example                # 환경변수 키 목록 (Git 추적)
@@ -42,7 +61,7 @@
 
 ### `src/lib/` — 외부 라이브러리 설정
 
-API 클라이언트와 JWT 토큰 저장소를 포함한다.
+API 클라이언트, JWT 토큰 저장소, TanStack Query 클라이언트를 포함한다.
 
 ```ts
 // src/lib/apiClient.ts
@@ -50,15 +69,16 @@ import axios from "axios";
 import { tokenStorage } from "@/lib/tokenStorage";
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 10000,
 });
 
 // 요청 인터셉터: JWT 토큰 자동 첨부
 apiClient.interceptors.request.use((config) => {
-  const token = tokenStorage.getToken();
+  const token = tokenStorage.getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -70,8 +90,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      tokenStorage.clearToken();
-      window.location.href = "/login";
+      tokenStorage.clearTokens();
+      const isAuthRoute = ["/login", "/register"].some((path) =>
+        window.location.pathname.startsWith(path),
+      );
+      if (!isAuthRoute) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   },
@@ -80,12 +105,13 @@ apiClient.interceptors.response.use(
 
 ```ts
 // src/lib/tokenStorage.ts
-const TOKEN_KEY = "access_token";
+const ACCESS_TOKEN_KEY = "access_token";
 
 export const tokenStorage = {
-  getToken: () => localStorage.getItem(TOKEN_KEY),
-  setToken: (token: string) => localStorage.setItem(TOKEN_KEY, token),
-  clearToken: () => localStorage.removeItem(TOKEN_KEY),
+  getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),
+  setAccessToken: (token: string) => localStorage.setItem(ACCESS_TOKEN_KEY, token),
+  clearTokens: () => localStorage.removeItem(ACCESS_TOKEN_KEY),
+  hasAccessToken: () => Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)),
 };
 ```
 
@@ -95,36 +121,61 @@ export const tokenStorage = {
 
 ```ts
 // src/services/authService.ts
+import { AUTH_ENDPOINTS } from "@/constants/apiEndpoints";
 import { apiClient } from "@/lib/apiClient";
-import type { LoginRequest, LoginResponse } from "@/types/auth";
+import type { LoginRequest, LoginResponse, RegisterRequest } from "@/types/auth";
+import { handleApiError } from "@/utils/error";
 
-export async function login(body: LoginRequest): Promise<LoginResponse> {
-  const { data } = await apiClient.post<LoginResponse>("/api/v1/auth/login", body);
-  return data;
-}
+export const authService = {
+  async register(body: RegisterRequest): Promise<void> {
+    try {
+      await apiClient.post(AUTH_ENDPOINTS.REGISTER, body);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 
-export async function register(body: LoginRequest): Promise<LoginResponse> {
-  const { data } = await apiClient.post<LoginResponse>("/api/v1/auth/register", body);
-  return data;
-}
+  async login(body: LoginRequest): Promise<LoginResponse> {
+    try {
+      const response = await apiClient.post<{ data: LoginResponse }>(
+        AUTH_ENDPOINTS.LOGIN,
+        body,
+      );
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+};
 ```
 
 ```ts
 // src/services/postService.ts
+import { POST_ENDPOINTS } from "@/constants/apiEndpoints";
 import { apiClient } from "@/lib/apiClient";
-import type { Post, PostListResponse, CreatePostRequest } from "@/types/post";
+import type { Post, PostListResponse, CreatePostRequest, PostSearchParams } from "@/types/post";
+import { handleApiError } from "@/utils/error";
 
-export async function getPosts(cursor?: string): Promise<PostListResponse> {
-  const { data } = await apiClient.get<PostListResponse>("/api/v1/posts", {
-    params: { cursor },
-  });
-  return data;
-}
+export const postService = {
+  async getPosts(params?: PostSearchParams): Promise<PostListResponse> {
+    try {
+      const response = await apiClient.get(POST_ENDPOINTS.BASE, { params });
+      const { items, nextCursor } = response.data.data;
+      return { data: items, nextCursor };
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 
-export async function createPost(body: CreatePostRequest): Promise<Post> {
-  const { data } = await apiClient.post<Post>("/api/v1/posts", body);
-  return data;
-}
+  async createPost(body: CreatePostRequest): Promise<Post> {
+    try {
+      const response = await apiClient.post(POST_ENDPOINTS.BASE, body);
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+};
 ```
 
 ### `src/types/` — 타입 정의
@@ -138,30 +189,46 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  nickname: string;
+}
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  nickname?: string;
+  createdAt?: string;
+}
+
 export interface LoginResponse {
   accessToken: string;
-  user: {
-    id: number;
-    email: string;
-    nickname: string;
-  };
 }
 ```
 
 ```ts
 // src/types/post.ts
+export interface PostAuthor {
+  id: number;
+  nickname: string;
+}
+
 export interface Post {
   id: number;
   title: string;
   content: string;
   authorId: number;
+  author: PostAuthor;
+  viewCount: number;
   createdAt: string;
   updatedAt: string;
+  attachments?: Attachment[];
 }
 
 export interface PostListResponse {
   data: Post[];
-  nextCursor: string | null;
+  nextCursor: number | null;
 }
 
 export interface CreatePostRequest {
@@ -190,14 +257,31 @@ export interface CreatePostRequest {
 ### vite.config.ts
 
 ```ts
-import { resolve } from "node:path";
-import { defineConfig } from "vite";
+import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  plugins: [
+    TanStackRouterVite({
+      routesDirectory: "./src/app/routes",
+      generatedRouteTree: "./src/app/routeTree.gen.ts",
+    }),
+    react(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src"),
+      "@": path.resolve(__dirname, "./src"),
     },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
+    css: true,
   },
 });
 ```
