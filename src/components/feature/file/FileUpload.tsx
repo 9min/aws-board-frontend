@@ -15,7 +15,12 @@ interface FileUploadProps {
   canEdit?: boolean
 }
 
-export function FileUpload({ postId, existingAttachments, onUploadComplete, canEdit = false }: FileUploadProps) {
+export function FileUpload({
+  postId,
+  existingAttachments,
+  onUploadComplete,
+  canEdit = false,
+}: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [attachments, setAttachments] = useState<Attachment[]>(existingAttachments)

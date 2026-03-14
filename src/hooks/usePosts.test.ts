@@ -86,9 +86,12 @@ describe('usePaginatedPosts', () => {
       limit: 10,
     })
 
-    const { result } = renderHook(() => usePaginatedPosts({ page: 2, search: '키워드', limit: 10 }), {
-      wrapper: createWrapper(),
-    })
+    const { result } = renderHook(
+      () => usePaginatedPosts({ page: 2, search: '키워드', limit: 10 }),
+      {
+        wrapper: createWrapper(),
+      },
+    )
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(postService.getPagedPosts).toHaveBeenCalledWith({ page: 2, search: '키워드', limit: 10 })

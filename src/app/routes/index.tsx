@@ -9,10 +9,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usePaginatedPosts } from '@/hooks/usePosts'
 
 export const Route = createFileRoute('/')({
-  validateSearch: (search: Record<string, unknown>): { search?: string; page: number } => ({
+  validateSearch: (search: Record<string, unknown>): { search?: string; page?: number } => ({
     search: typeof search.search === 'string' ? search.search : undefined,
-    page:
-      typeof search.page === 'number' && search.page >= 1 ? Math.floor(search.page) : 1,
+    page: typeof search.page === 'number' && search.page >= 1 ? Math.floor(search.page) : undefined,
   }),
   component: HomePage,
 })
@@ -20,7 +19,7 @@ export const Route = createFileRoute('/')({
 function HomePage() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
-  const { search, page } = Route.useSearch()
+  const { search, page = 1 } = Route.useSearch()
 
   const { data, isLoading, isError } = usePaginatedPosts({ page, search })
 

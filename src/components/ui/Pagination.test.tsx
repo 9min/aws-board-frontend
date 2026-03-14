@@ -51,7 +51,9 @@ describe('Pagination', () => {
   it('최대 5개 페이지 번호만 표시한다', () => {
     render(<Pagination currentPage={5} totalPages={10} onPageChange={vi.fn()} />)
     // 이전/다음 버튼 제외하고 숫자 버튼 5개만
-    const pageButtons = screen.getAllByRole('button').filter((btn) => /^\d+$/.test(btn.textContent ?? ''))
+    const pageButtons = screen
+      .getAllByRole('button')
+      .filter((btn) => /^\d+$/.test(btn.textContent ?? ''))
     expect(pageButtons).toHaveLength(5)
   })
 
