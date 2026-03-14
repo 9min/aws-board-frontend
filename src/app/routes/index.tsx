@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { PenLine, Search } from 'lucide-react'
 import { PostCard } from '@/components/feature/post/PostCard'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { PostCardSkeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInfinitePosts } from '@/hooks/usePosts'
 
@@ -27,30 +29,65 @@ function HomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">게시판</h1>
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">게시판</h1>
+          <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+            자유롭게 소통하고 정보를 나눠보세요
+          </p>
+        </div>
         {isAuthenticated && (
-          <Button onClick={() => void navigate({ to: '/posts/new' })} size="sm">
+          <Button
+            onClick={() => void navigate({ to: '/posts/new' })}
+            size="sm"
+            className="flex items-center gap-1.5"
+          >
+            <PenLine className="h-3.5 w-3.5" />
             글쓰기
           </Button>
         )}
       </div>
 
-      <div className="mb-4">
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
         <Input
+          className="pl-9"
           placeholder="제목 또는 내용으로 검색"
           value={search ?? ''}
           onChange={handleSearchChange}
         />
       </div>
 
-      {isLoading && <p className="text-center text-muted-foreground">불러오는 중...</p>}
-      {isError && (
-        <p className="text-center text-red-500">게시글을 불러오지 못했습니다. 다시 시도해주세요.</p>
+      {isLoading && (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: 스켈레톤 로딩용 인덱스 키
+            <PostCardSkeleton key={i} />
+          ))}
+        </div>
       )}
+
+      {isError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+          게시글을 불러오지 못했습니다. 다시 시도해주세요.
+        </div>
+      )}
+
       {!isLoading && !isError && posts.length === 0 && (
-        <p className="text-center text-muted-foreground">게시글이 없습니다.</p>
+        <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.4)] p-12 text-center">
+          <p className="text-[hsl(var(--muted-foreground))]">게시글이 없습니다.</p>
+          {isAuthenticated && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={() => void navigate({ to: '/posts/new' })}
+            >
+              첫 글을 작성해보세요
+            </Button>
+          )}
+        </div>
       )}
 
       <div className="flex flex-col gap-3">
@@ -65,6 +102,7 @@ function HomePage() {
             onClick={() => void fetchNextPage()}
             isLoading={isFetchingNextPage}
             variant="secondary"
+            size="sm"
           >
             더 보기
           </Button>

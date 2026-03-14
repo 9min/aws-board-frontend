@@ -1,6 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { ArrowLeft, Calendar, Eye, User } from 'lucide-react'
+import { CommentList } from '@/components/feature/comment/CommentList'
+import { FileUpload } from '@/components/feature/file/FileUpload'
+import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
+import { useComments } from '@/hooks/useComments'
 import { useDeletePostMutation, usePost } from '@/hooks/usePosts'
 import { formatDate } from '@/utils/formatDate'
 
@@ -12,15 +17,24 @@ function PostDetailPage() {
   const { postId } = Route.useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { data: post, isLoading, isError } = usePost(Number(postId))
+  const { data: post, isLoading, isError, refetch: refetchPost } = usePost(Number(postId))
+  const { data: comments = [] } = useComments(Number(postId))
   const deleteMutation = useDeletePostMutation()
 
   if (isLoading) {
-    return <p className="py-8 text-center text-muted-foreground">불러오는 중...</p>
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center text-[hsl(var(--muted-foreground))]">
+        불러오는 중...
+      </div>
+    )
   }
 
   if (isError || !post) {
-    return <p className="py-8 text-center text-red-500">게시글을 불러오지 못했습니다.</p>
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center text-red-500">
+        게시글을 불러오지 못했습니다.
+      </div>
+    )
   }
 
   const isAuthor = user?.id === post.authorId
@@ -31,42 +45,80 @@ function PostDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl py-8">
-      <div className="mb-6">
-        <Button variant="ghost" size="sm" onClick={() => void navigate({ to: '/' })}>
-          ← 목록으로
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void navigate({ to: '/' })}
+          className="flex items-center gap-1.5 text-[hsl(var(--muted-foreground))]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          목록으로
         </Button>
+
+        {isAuthor && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void navigate({ to: '/posts/$postId/edit', params: { postId } })}
+            >
+              수정
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              isLoading={deleteMutation.isPending}
+            >
+              삭제
+            </Button>
+          </div>
+        )}
       </div>
 
-      <h1 className="mb-4 text-3xl font-bold">{post.title}</h1>
+      <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
+        <h1 className="mb-4 text-2xl font-bold leading-tight text-[hsl(var(--foreground))]">
+          {post.title}
+        </h1>
 
-      <div className="mb-6 flex items-center gap-4 text-sm text-muted-foreground">
-        <span>{post.author.nickname}</span>
-        <span>{formatDate(post.createdAt)}</span>
-        <span>조회 {post.viewCount}</span>
-      </div>
-
-      {isAuthor && (
-        <div className="mb-6 flex gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => void navigate({ to: '/posts/$postId/edit', params: { postId } })}
-          >
-            수정
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            isLoading={deleteMutation.isPending}
-          >
-            삭제
-          </Button>
+        <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-[hsl(var(--border))] pb-4">
+          <div className="flex items-center gap-1.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-xs font-bold text-white">
+              {post.author.nickname[0].toUpperCase()}
+            </div>
+            <span className="flex items-center gap-1 text-sm font-medium text-[hsl(var(--foreground))]">
+              <User className="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+              {post.author.nickname}
+            </span>
+          </div>
+          <span className="flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))]">
+            <Calendar className="h-3.5 w-3.5" />
+            {formatDate(post.createdAt)}
+          </span>
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            조회 {post.viewCount}
+          </Badge>
         </div>
-      )}
 
-      <div className="whitespace-pre-wrap rounded-lg border border-border p-6">{post.content}</div>
+        <div className="whitespace-pre-wrap text-[0.9375rem] leading-7 text-[hsl(var(--foreground))]">
+          {post.content}
+        </div>
+      </div>
+
+      <section className="mt-6">
+        <FileUpload
+          postId={post.id}
+          existingAttachments={post.attachments ?? []}
+          onUploadComplete={() => void refetchPost()}
+        />
+      </section>
+
+      <section className="mt-6 border-t border-[hsl(var(--border))] pt-6">
+        <CommentList postId={post.id} comments={comments} />
+      </section>
     </div>
   )
 }

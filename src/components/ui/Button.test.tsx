@@ -23,7 +23,9 @@ describe('Button', () => {
 
   it('variant="destructive" 클래스가 적용된다', () => {
     render(<Button variant="destructive">삭제</Button>)
-    expect(screen.getByRole('button')).toHaveClass('bg-red-500')
+    const button = screen.getByRole('button')
+    // destructive variant는 CSS 변수 기반 배경색 클래스를 사용한다
+    expect(button.className).toMatch(/destructive/)
   })
 
   it('size="sm" 클래스가 적용된다', () => {
