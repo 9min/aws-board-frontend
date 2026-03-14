@@ -2,6 +2,7 @@ import { POST_ENDPOINTS } from '@/constants/apiEndpoints'
 import { apiClient } from '@/lib/apiClient'
 import type {
   CreatePostRequest,
+  PagedPostListResponse,
   Post,
   PostListResponse,
   PostSearchParams,
@@ -22,6 +23,15 @@ interface ListData<T> {
   nextCursor: number | null
 }
 
+// 페이지 기반 목록 응답의 data 필드 구조
+interface PagedListData<T> {
+  items: T[]
+  total: number
+  page: number
+  totalPages: number
+  limit: number
+}
+
 export const postService = {
   async getPosts(params?: PostSearchParams): Promise<PostListResponse> {
     try {
@@ -30,6 +40,22 @@ export const postService = {
       })
       const { items, nextCursor } = response.data.data
       return { data: items, nextCursor }
+    } catch (error) {
+      throw handleApiError(error)
+    }
+  },
+
+  async getPagedPosts(params: {
+    page: number
+    limit?: number
+    search?: string
+  }): Promise<PagedPostListResponse> {
+    try {
+      const response = await apiClient.get<ApiEnvelope<PagedListData<Post>>>(POST_ENDPOINTS.BASE, {
+        params,
+      })
+      const { items, total, page, totalPages, limit } = response.data.data
+      return { data: items, total, page, totalPages, limit }
     } catch (error) {
       throw handleApiError(error)
     }
