@@ -76,6 +76,7 @@
 
 | 문서 | 설명 |
 |------|------|
+| [docs/prd.md](docs/prd.md) | 프로젝트 요구사항 정의서 (PRD) |
 | [docs/git-workflow.md](docs/git-workflow.md) | Git 워크플로우 및 브랜치 전략 |
 | [docs/commit-convention.md](docs/commit-convention.md) | 커밋 메시지 컨벤션 |
 | [docs/project-structure.md](docs/project-structure.md) | 프로젝트 폴더 구조 가이드 |
