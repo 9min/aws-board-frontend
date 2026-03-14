@@ -99,13 +99,6 @@ function NewPostPage() {
             existingAttachments={[]}
             onUploadComplete={() => {}}
           />
-
-          <div className="flex justify-end">
-            <Button onClick={handleViewPost} className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4" />
-              완료 — 게시물 보기
-            </Button>
-          </div>
         </div>
       )}
     </div>
