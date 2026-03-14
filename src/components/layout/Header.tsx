@@ -46,7 +46,7 @@ export function Header() {
                 <button
                   type="button"
                   onClick={logout}
-                  className="ml-1 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+                  className="ml-1 flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   로그아웃
