@@ -12,6 +12,7 @@ export interface Post {
   viewCount: number
   createdAt: string
   updatedAt: string
+  attachments?: import('./file').Attachment[]
 }
 
 export interface CreatePostRequest {
