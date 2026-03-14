@@ -3,9 +3,11 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
+import type { Attachment } from '@/types/file'
+import { FileUpload } from '../file/FileUpload'
 
 const postSchema = z.object({
-  title: z.string().min(1, '제목을 입력해주세요.').max(100, '제목은 100자 이하로 입력해주세요.'),
+  title: z.string().min(1, '제목을 입력해주세요.').max(200, '제목은 200자 이하로 입력해주세요.'),
   content: z.string().min(1, '내용을 입력해주세요.'),
 })
 
@@ -18,6 +20,9 @@ interface PostFormProps {
   error?: string
   defaultValues?: { title?: string; content?: string }
   submitLabel?: string
+  postId?: number
+  attachments?: Attachment[]
+  onAttachmentChange?: () => void
 }
 
 export function PostForm({
@@ -26,6 +31,9 @@ export function PostForm({
   error,
   defaultValues = {},
   submitLabel = '저장',
+  postId,
+  attachments,
+  onAttachmentChange,
 }: PostFormProps) {
   const [formData, setFormData] = useState<PostFormData>({
     title: defaultValues.title ?? '',
@@ -67,34 +75,43 @@ export function PostForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-label="게시글 폼" noValidate>
-      {error && (
-        <div role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
-          {error}
+    <div>
+      <form onSubmit={handleSubmit} aria-label="게시글 폼" noValidate>
+        {error && (
+          <div role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+        <div className="flex flex-col gap-4">
+          <Input
+            label="제목"
+            name="title"
+            value={formData.title}
+            onChange={handleInputChange}
+            error={fieldErrors.title}
+            placeholder="제목을 입력하세요"
+          />
+          <Textarea
+            label="내용"
+            name="content"
+            value={formData.content}
+            onChange={handleTextareaChange}
+            error={fieldErrors.content}
+            placeholder="내용을 입력하세요"
+            rows={10}
+          />
+          <Button type="submit" isLoading={isLoading} className="self-end">
+            {submitLabel}
+          </Button>
         </div>
+      </form>
+      {postId !== undefined && (
+        <FileUpload
+          postId={postId}
+          existingAttachments={attachments ?? []}
+          onUploadComplete={onAttachmentChange ?? (() => {})}
+        />
       )}
-      <div className="flex flex-col gap-4">
-        <Input
-          label="제목"
-          name="title"
-          value={formData.title}
-          onChange={handleInputChange}
-          error={fieldErrors.title}
-          placeholder="제목을 입력하세요"
-        />
-        <Textarea
-          label="내용"
-          name="content"
-          value={formData.content}
-          onChange={handleTextareaChange}
-          error={fieldErrors.content}
-          placeholder="내용을 입력하세요"
-          rows={10}
-        />
-        <Button type="submit" isLoading={isLoading} className="self-end">
-          {submitLabel}
-        </Button>
-      </div>
-    </form>
+    </div>
   )
 }
