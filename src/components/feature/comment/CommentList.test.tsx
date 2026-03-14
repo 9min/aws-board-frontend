@@ -113,7 +113,10 @@ describe('CommentList', () => {
     await user.click(screen.getByRole('button', { name: '삭제' }))
 
     expect(window.confirm).toHaveBeenCalledWith('정말 삭제하시겠습니까?')
-    expect(mockDeleteMutate).toHaveBeenCalledWith(2, expect.objectContaining({ onError: expect.any(Function) }))
+    expect(mockDeleteMutate).toHaveBeenCalledWith(
+      2,
+      expect.objectContaining({ onError: expect.any(Function) }),
+    )
   })
 
   it('삭제 confirm 취소 시 deleteMutation을 호출하지 않는다', async () => {

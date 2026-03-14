@@ -60,7 +60,10 @@ describe('useDeleteAttachment', () => {
   })
 
   it('삭제 실패 시 false를 반환하고 error를 설정한다', async () => {
-    mockDeleteAttachment.mockRejectedValueOnce({ code: 'FORBIDDEN', message: '삭제 권한이 없습니다.' })
+    mockDeleteAttachment.mockRejectedValueOnce({
+      code: 'FORBIDDEN',
+      message: '삭제 권한이 없습니다.',
+    })
     const { result } = renderHook(() => useDeleteAttachment())
 
     let ok: boolean | undefined
