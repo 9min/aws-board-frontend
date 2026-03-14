@@ -132,6 +132,7 @@ function PostDetailPage() {
           postId={post.id}
           existingAttachments={post.attachments ?? []}
           onUploadComplete={() => void refetchPost()}
+          canEdit={isAuthor}
         />
       </section>
 

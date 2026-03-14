@@ -135,6 +135,48 @@ describe('postService.updatePost', () => {
   })
 })
 
+describe('postService.getPagedPosts', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('page=1 파라미터로 API를 호출한다', async () => {
+    const { apiClient } = await import('@/lib/apiClient')
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: {
+        data: { items: [mockPost], total: 1, page: 1, totalPages: 1, limit: 10 },
+        error: null,
+        meta: null,
+      },
+    })
+
+    await postService.getPagedPosts({ page: 1 })
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/posts', {
+      params: { page: 1 },
+    })
+  })
+
+  it('응답에서 total, totalPages, page, limit을 반환한다', async () => {
+    const { apiClient } = await import('@/lib/apiClient')
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: {
+        data: { items: [mockPost], total: 100, page: 2, totalPages: 10, limit: 10 },
+        error: null,
+        meta: null,
+      },
+    })
+
+    const result = await postService.getPagedPosts({ page: 2, limit: 10 })
+    expect(result).toEqual({
+      data: [mockPost],
+      total: 100,
+      page: 2,
+      totalPages: 10,
+      limit: 10,
+    })
+  })
+})
+
 describe('postService.deletePost', () => {
   beforeEach(() => {
     vi.clearAllMocks()

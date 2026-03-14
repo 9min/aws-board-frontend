@@ -3,13 +3,15 @@ import { PenLine, Search } from 'lucide-react'
 import { PostCard } from '@/components/feature/post/PostCard'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Pagination } from '@/components/ui/Pagination'
 import { PostCardSkeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInfinitePosts } from '@/hooks/usePosts'
+import { usePaginatedPosts } from '@/hooks/usePosts'
 
 export const Route = createFileRoute('/')({
-  validateSearch: (search: Record<string, unknown>): { search?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { search?: string; page?: number } => ({
     search: typeof search.search === 'string' ? search.search : undefined,
+    page: typeof search.page === 'number' && search.page >= 1 ? Math.floor(search.page) : undefined,
   }),
   component: HomePage,
 })
@@ -17,15 +19,19 @@ export const Route = createFileRoute('/')({
 function HomePage() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
-  const { search } = Route.useSearch()
+  const { search, page = 1 } = Route.useSearch()
 
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfinitePosts({ search })
+  const { data, isLoading, isError } = usePaginatedPosts({ page, search })
 
-  const posts = data?.pages.flatMap((page) => page.data) ?? []
+  const posts = data?.data ?? []
+  const totalPages = data?.totalPages ?? 1
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    void navigate({ to: '/', search: { search: e.target.value || undefined } })
+    void navigate({ to: '/', search: { search: e.target.value || undefined, page: 1 } })
+  }
+
+  const handlePageChange = (newPage: number) => {
+    void navigate({ to: '/', search: { search, page: newPage } })
   }
 
   return (
@@ -101,16 +107,14 @@ function HomePage() {
           ))}
         </div>
 
-        {hasNextPage && (
+        {!isLoading && !isError && totalPages > 1 && (
           <div className="mt-6 flex justify-center">
-            <Button
-              onClick={() => void fetchNextPage()}
-              isLoading={isFetchingNextPage}
-              variant="secondary"
-              size="sm"
-            >
-              더 보기
-            </Button>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              isLoading={isLoading}
+            />
           </div>
         )}
       </div>

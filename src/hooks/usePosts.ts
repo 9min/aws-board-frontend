@@ -3,6 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { postService } from '@/services/postService'
 import type { CreatePostRequest, UpdatePostRequest } from '@/types/post'
 
+/**
+ * @deprecated useInfinitePosts 대신 usePaginatedPosts를 사용하세요.
+ * 페이지 기반 pagination으로 전환되었습니다.
+ */
 export function useInfinitePosts(params?: { search?: string; limit?: number }) {
   return useInfiniteQuery({
     queryKey: ['posts', params],
@@ -14,6 +18,13 @@ export function useInfinitePosts(params?: { search?: string; limit?: number }) {
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as number | undefined,
+  })
+}
+
+export function usePaginatedPosts(params: { page: number; search?: string; limit?: number }) {
+  return useQuery({
+    queryKey: ['posts', 'paged', params],
+    queryFn: () => postService.getPagedPosts(params),
   })
 }
 

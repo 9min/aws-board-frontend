@@ -110,6 +110,7 @@ export function PostForm({
           postId={postId}
           existingAttachments={attachments ?? []}
           onUploadComplete={onAttachmentChange ?? (() => {})}
+          canEdit
         />
       )}
     </div>
