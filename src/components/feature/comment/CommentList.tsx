@@ -1,5 +1,5 @@
+import { MessageSquare } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   useCreateCommentMutation,
@@ -43,15 +43,26 @@ export function CommentList({ postId, comments }: CommentListProps) {
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="mb-4 text-xl font-semibold">댓글</h2>
+    <div>
+      <h2 className="mb-4 flex items-center gap-1.5 text-base font-semibold text-[hsl(var(--foreground))]">
+        <MessageSquare className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+        댓글
+        {comments.length > 0 && (
+          <span className="ml-0.5 rounded-full bg-[hsl(var(--accent)/0.1)] px-1.5 py-0.5 text-xs font-medium text-[hsl(var(--accent))]">
+            {comments.length}
+          </span>
+        )}
+      </h2>
 
       {comments.length === 0 ? (
-        <p className="mb-4 text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
+        <p className="mb-4 text-sm text-[hsl(var(--muted-foreground))]">아직 댓글이 없습니다.</p>
       ) : (
-        <ul className="mb-6 divide-y divide-border">
+        <ul className="mb-6 space-y-3">
           {comments.map((comment) => (
-            <li key={comment.id} className="py-4">
+            <li
+              key={comment.id}
+              className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4"
+            >
               {editingId === comment.id ? (
                 <CommentForm
                   onSubmit={(data) => handleUpdate(comment.id, data)}
@@ -63,28 +74,43 @@ export function CommentList({ postId, comments }: CommentListProps) {
                 />
               ) : (
                 <div>
-                  <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{comment.authorNickname}</span>
-                    <span>{formatDate(comment.createdAt)}</span>
-                  </div>
-                  <p className="whitespace-pre-wrap text-sm">{comment.content}</p>
-                  {user?.id === comment.authorId && (
-                    <div className="mt-2 flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => setEditingId(comment.id)}>
-                        수정
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(comment.id)}
-                        isLoading={
-                          deleteMutation.isPending && deleteMutation.variables === comment.id
-                        }
-                      >
-                        삭제
-                      </Button>
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--accent)/0.15)] text-xs font-bold text-[hsl(var(--accent))]">
+                        {(comment.authorNickname ?? '?')[0]?.toUpperCase() ?? '?'}
+                      </div>
+                      <span className="text-sm font-medium text-[hsl(var(--foreground))]">
+                        {comment.authorNickname}
+                      </span>
+                      <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                        {formatDate(comment.createdAt)}
+                      </span>
                     </div>
-                  )}
+                    {user?.id === comment.authorId && (
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(comment.id)}
+                          className="cursor-pointer rounded px-2 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(comment.id)}
+                          disabled={
+                            deleteMutation.isPending && deleteMutation.variables === comment.id
+                          }
+                          className="cursor-pointer rounded px-2 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--destructive))] disabled:opacity-50"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-[hsl(var(--foreground))]">
+                    {comment.content}
+                  </p>
                 </div>
               )}
             </li>
@@ -92,12 +118,14 @@ export function CommentList({ postId, comments }: CommentListProps) {
         </ul>
       )}
 
-      <CommentForm
-        key={createFormKey}
-        onSubmit={handleCreate}
-        isLoading={createMutation.isPending}
-        error={createMutation.isError ? getErrorMessage(createMutation.error) : undefined}
-      />
+      <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+        <CommentForm
+          key={createFormKey}
+          onSubmit={handleCreate}
+          isLoading={createMutation.isPending}
+          error={createMutation.isError ? getErrorMessage(createMutation.error) : undefined}
+        />
+      </div>
     </div>
   )
 }
