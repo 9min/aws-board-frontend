@@ -1,0 +1,14 @@
+# 텍스트 파일 줄바꿈 통일 (LF)
+* text=auto eol=lf
+
+# 바이너리 파일
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
