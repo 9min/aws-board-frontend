@@ -85,36 +85,29 @@ export function validateEmail(email: string): boolean {
 기능 구현을 완료할 때마다 아래 항목을 점검한다.
 
 - [ ] **입력 검증**: 사용자 입력에 대해 zod 등으로 스키마 검증을 적용했는가?
-- [ ] **인젝션 방지**: Supabase Client 메서드를 사용하고, 직접 SQL 문자열 결합을 하지 않았는가?
+- [ ] **인젝션 방지**: axios `params` 옵션을 사용하고, 직접 URL 문자열 결합을 하지 않았는가?
 - [ ] **XSS 방지**: `dangerouslySetInnerHTML`을 사용하지 않았는가? 불가피한 경우 새니타이즈했는가?
 - [ ] **인증/인가**: 보호가 필요한 데이터/페이지에 인증 확인이 적용되었는가?
-- [ ] **RLS 정책**: 새로 추가한 테이블에 RLS가 활성화되고 적절한 정책이 설정되었는가?
+- [ ] **파일 업로드 권한**: 로그인한 사용자만 파일 업로드 기능에 접근 가능한가?
 - [ ] **시크릿 노출**: 코드에 API 키, 비밀번호 등이 하드코딩되지 않았는가?
-- [ ] **에러 노출**: 에러 메시지에 내부 구현 세부사항(스택 트레이스, DB 스키마 등)이 노출되지 않는가?
-- [ ] **권한 경계**: 다른 사용자의 데이터에 접근할 수 없는가? (수평적 권한 상승 방지)
+- [ ] **에러 노출**: 에러 메시지에 내부 구현 세부사항(스택 트레이스 등)이 노출되지 않는가?
+- [ ] **권한 경계**: 다른 사용자의 게시글/댓글/첨부파일에 접근할 수 없는가? (수평적 권한 상승 방지)
 
 #### 보안 테스트 작성 예시
 
 ```ts
-describe("TodoService 보안", () => {
-  it("다른 사용자의 할 일을 수정할 수 없다", async () => {
-    mockAuthenticated({ id: "user-1" });
-    const otherUserTodo = createTestTodo({ user_id: "user-2" });
-
-    await expect(
-      updateTodo(otherUserTodo.id, { title: "변경 시도" })
-    ).rejects.toThrow();
-  });
-
-  it("제목이 200자를 초과하면 생성에 실패한다", async () => {
-    const longTitle = "가".repeat(201);
-    await expect(createTodo({ title: longTitle })).rejects.toThrow();
+describe("PostForm 보안", () => {
+  it("제목이 200자를 초과하면 제출 버튼이 비활성화된다", async () => {
+    render(<PostForm onSubmit={vi.fn()} />);
+    const titleInput = screen.getByLabelText("제목");
+    await userEvent.type(titleInput, "가".repeat(201));
+    expect(screen.getByRole("button", { name: "등록" })).toBeDisabled();
   });
 
   it("HTML 태그가 포함된 입력을 안전하게 처리한다", () => {
     const maliciousInput = '<script>alert("xss")</script>';
-    render(<TodoItem title={maliciousInput} />);
-    expect(screen.queryByText(maliciousInput)).toBeInTheDocument();
+    render(<PostCard title={maliciousInput} />);
+    // React는 기본적으로 이스케이핑하므로 script 태그가 실행되지 않는다
     expect(document.querySelector("script")).toBeNull();
   });
 });
@@ -130,18 +123,26 @@ describe("TodoService 보안", () => {
 
 ### 파일 위치
 
-테스트 파일은 `tests/` 디렉토리에 소스 구조를 미러링하여 배치한다.
+테스트 파일은 소스 파일과 동일한 디렉토리에 코로케이션(colocation) 방식으로 배치한다. (`*.test.ts(x)` 파일을 소스 파일 옆에 둔다.)
 
 ```
-프로젝트-루트/
-├── src/
-│   ├── components/LoginForm.tsx
-│   ├── hooks/useAuth.ts
-│   └── services/authService.ts
-└── tests/
-    ├── components/LoginForm.test.tsx
-    ├── hooks/useAuth.test.ts
-    └── services/authService.test.ts
+src/
+├── components/
+│   ├── feature/
+│   │   ├── auth/
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── LoginForm.test.tsx   # 소스 파일 옆에 배치
+│   │   └── post/
+│   │       ├── PostCard.tsx
+│   │       └── PostCard.test.tsx
+├── hooks/
+│   ├── useAuthMutation.ts
+│   └── useAuthMutation.test.ts
+├── services/
+│   ├── authService.ts
+│   └── authService.test.ts
+└── test/
+    └── setup.ts                     # Vitest 전역 설정
 ```
 
 ### 파일 네이밍
@@ -183,7 +184,7 @@ describe("formatDate", () => {
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { LoginForm } from "@/components/LoginForm";
+import { LoginForm } from "@/components/feature/auth/LoginForm";
 
 describe("LoginForm", () => {
   it("유효한 입력으로 폼을 제출하면 onSubmit이 호출된다", async () => {
@@ -309,175 +310,106 @@ it("5초 후에 자동으로 알림을 닫는다", () => {
 });
 ```
 
-## Supabase 모킹 전략
+## API 클라이언트 모킹 전략
 
-### supabase-js 클라이언트 모킹
+### axios 모킹
 
-Supabase 클라이언트의 체이닝 메서드를 모킹한다.
+`apiClient`는 axios 기반이므로 `vi.mock`으로 모킹한다.
 
 ```ts
 import { vi } from "vitest";
+import { apiClient } from "@/lib/apiClient";
 
-// supabase 클라이언트 모킹
-vi.mock("@/lib/supabase", () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      single: vi.fn(),
-    })),
-    auth: {
-      getSession: vi.fn(),
-      signInWithPassword: vi.fn(),
-      signOut: vi.fn(),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } },
-      })),
+vi.mock("@/lib/apiClient", () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+    interceptors: {
+      request: { use: vi.fn() },
+      response: { use: vi.fn() },
     },
   },
 }));
-```
 
-### 모킹 헬퍼 패턴
+const mockedGet = vi.mocked(apiClient.get);
 
-재사용 가능한 모킹 헬퍼를 `tests/helpers/supabaseMock.ts`에 작성한다.
+it("게시글 목록을 정상적으로 조회한다", async () => {
+  mockedGet.mockResolvedValue({
+    data: { data: { items: [], total: 0, page: 1, totalPages: 1, limit: 10 }, error: null },
+  });
 
-```ts
-// tests/helpers/supabaseMock.ts
-import { vi } from "vitest";
-import { supabase } from "@/lib/supabase";
-
-export function mockSupabaseSelect<T>(table: string, data: T[], error: null | { message: string } = null) {
-  const mockChain = {
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    range: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: data[0] ?? null, error }),
-    then: vi.fn((resolve) => resolve({ data, error })),
-  };
-
-  // select 이후 체이닝 지원
-  Object.assign(mockChain.select, mockChain);
-
-  vi.mocked(supabase.from).mockReturnValue(mockChain as never);
-  return mockChain;
-}
-```
-
-사용 예시:
-
-```ts
-import { mockSupabaseSelect } from "../helpers/supabaseMock";
-
-it("할 일 목록을 조회한다", async () => {
-  const mockTodos = [{ id: "1", title: "테스트", is_completed: false }];
-  mockSupabaseSelect("todos", mockTodos);
-
-  const result = await getTodos();
-  expect(result).toEqual(mockTodos);
+  const result = await postService.getPagedPosts({ page: 1 });
+  expect(result.data).toEqual([]);
 });
 ```
 
-### 인증 상태 모킹
+### 인증 상태 모킹 (AuthContext)
 
 ```ts
 import { vi } from "vitest";
-import { supabase } from "@/lib/supabase";
 
-// 인증된 상태
-function mockAuthenticated(user = { id: "user-1", email: "test@example.com" }) {
-  vi.mocked(supabase.auth.getSession).mockResolvedValue({
-    data: { session: { user, access_token: "token", refresh_token: "refresh" } as never },
-    error: null,
-  });
-}
+// AuthContext 모킹
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: vi.fn(() => ({
+    user: { id: 1, email: "test@example.com" },
+    isAuthenticated: true,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+  })),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
 
 // 미인증 상태
-function mockUnauthenticated() {
-  vi.mocked(supabase.auth.getSession).mockResolvedValue({
-    data: { session: null },
-    error: null,
-  });
-}
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: vi.fn(() => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+  })),
+}));
 ```
 
 ### 테스트 데이터 팩토리
 
-`tests/factories/` 디렉토리에 팩토리 함수를 작성한다.
-
 ```ts
-// tests/factories/todoFactory.ts
-import type { Todo } from "@/types/todo";
+// 게시글 팩토리 예시
+import type { Post } from "@/types/post";
 
-export function createTestTodo(overrides: Partial<Todo> = {}): Todo {
+export function createTestPost(overrides: Partial<Post> = {}): Post {
   return {
-    id: crypto.randomUUID(),
-    user_id: "test-user-id",
-    title: "테스트 할 일",
-    is_completed: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    id: 1,
+    title: "테스트 게시글",
+    content: "테스트 내용",
+    authorId: 1,
+    author: { id: 1, nickname: "테스터" },
+    viewCount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   };
 }
+```
 
-export function createTestTodos(count: number, overrides: Partial<Todo> = {}): Todo[] {
-  return Array.from({ length: count }, (_, i) =>
-    createTestTodo({ title: `테스트 할 일 ${i + 1}`, ...overrides })
+### API 에러 시뮬레이션
+
+```ts
+import axios from "axios";
+
+it("API 에러 시 AppError를 던진다", async () => {
+  vi.mocked(apiClient.get).mockRejectedValue(
+    Object.assign(new Error("Not Found"), {
+      isAxiosError: true,
+      response: { status: 404, data: { message: "게시글을 찾을 수 없습니다." } },
+    })
   );
-}
-```
 
-### Supabase 에러 시뮬레이션
-
-```ts
-it("Supabase 에러 시 예외를 던진다", async () => {
-  const mockError = { message: "테이블을 찾을 수 없습니다", code: "42P01" };
-
-  vi.mocked(supabase.from).mockReturnValue({
-    select: vi.fn().mockReturnThis(),
-    order: vi.fn().mockResolvedValue({ data: null, error: mockError }),
-  } as never);
-
-  await expect(getTodos()).rejects.toThrow();
-});
-```
-
-### RLS 정책 테스트
-
-Supabase 로컬 환경에서 실제 RLS 정책을 테스트한다.
-
-```ts
-// tests/rls/todos.rls.test.ts
-import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = "http://localhost:54321";
-const SERVICE_ROLE_KEY = "서비스_롤_키"; // supabase start 출력값
-
-// 특정 사용자로 인증된 클라이언트 생성
-function createAuthenticatedClient(userId: string) {
-  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${generateJwt(userId)}`,
-      },
-    },
-  });
-}
-
-describe("todos RLS 정책", () => {
-  it("본인의 할 일만 조회할 수 있다", async () => {
-    const client = createAuthenticatedClient("user-1");
-    const { data } = await client.from("todos").select("*");
-
-    for (const todo of data ?? []) {
-      expect(todo.user_id).toBe("user-1");
-    }
+  await expect(postService.getPost(999)).rejects.toMatchObject({
+    code: "NOT_FOUND",
   });
 });
 ```

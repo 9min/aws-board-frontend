@@ -72,13 +72,13 @@ export interface LoginRequest {
 export interface AuthUser {
   id: number;
   email: string;
-  nickname: string;
-  createdAt: string;
+  nickname?: string;
+  createdAt?: string;
 }
 
+// 로그인 응답: 액세스 토큰만 반환. 사용자 정보는 JWT payload에서 디코딩한다.
 export interface LoginResponse {
   accessToken: string;
-  user: AuthUser;
 }
 ```
 
@@ -86,19 +86,21 @@ export interface LoginResponse {
 
 ```ts
 // src/types/post.ts
-import type { CursorPaginatedResponse } from "./common";
+export interface PostAuthor {
+  id: number;
+  nickname: string;
+}
 
 export interface Post {
   id: number;
   title: string;
   content: string;
   authorId: number;
-  authorNickname: string;
+  author: PostAuthor;
   viewCount: number;
-  commentCount: number;
-  attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
+  attachments?: import('./file').Attachment[];
 }
 
 export interface CreatePostRequest {
@@ -111,19 +113,27 @@ export interface UpdatePostRequest {
   content?: string;
 }
 
+// cursor: 커서 기반 페이지네이션용 (number 타입), page: 페이지 기반 페이지네이션용
 export interface PostSearchParams {
-  cursor?: string;
+  cursor?: number;
   limit?: number;
-  keyword?: string;
+  search?: string;  // 키워드 검색 파라미터 (keyword 아님)
+  page?: number;
 }
 
-export type PostListResponse = CursorPaginatedResponse<Post>;
+// 커서 기반 페이지네이션 응답
+export interface PostListResponse {
+  data: Post[];
+  nextCursor: number | null;
+}
 
-export interface Attachment {
-  id: number;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
+// 페이지 기반 페이지네이션 응답 (실제 사용 중)
+export interface PagedPostListResponse {
+  data: Post[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
 }
 ```
 
@@ -161,12 +171,18 @@ export interface PresignedPostResponse {
   fields: Record<string, string>;
 }
 
-// 첨부 파일 등록 요청
+// 첨부 파일 등록 요청: S3에 업로드된 오브젝트의 key만 전달한다.
 export interface RegisterAttachmentRequest {
-  fileName: string;
-  fileKey: string;
-  fileSize: number;
-  mimeType: string;
+  key: string;
+}
+
+// 첨부 파일
+export interface Attachment {
+  id: number;
+  postId: number;
+  key: string;
+  url: string;
+  createdAt: string;
 }
 ```
 
@@ -215,40 +231,67 @@ interface UpdatePostRequest {
 
 ## 서비스 함수와 타입 연동
 
+백엔드는 모든 응답을 `{ data, error, meta }` 래퍼 구조로 반환한다. 서비스 함수에서 `.data.data`를 통해 실제 페이로드를 추출한다.
+
 ```ts
 // src/services/postService.ts
+import { POST_ENDPOINTS } from "@/constants/apiEndpoints";
 import { apiClient } from "@/lib/apiClient";
 import type {
   Post,
-  PostListResponse,
+  PagedPostListResponse,
   PostSearchParams,
   CreatePostRequest,
   UpdatePostRequest,
 } from "@/types/post";
+import { handleApiError } from "@/utils/error";
 
-export async function getPosts(params?: PostSearchParams): Promise<PostListResponse> {
-  const { data } = await apiClient.get<PostListResponse>("/api/v1/posts", { params });
-  return data;
-}
+export const postService = {
+  async getPagedPosts(params: { page: number; limit?: number; search?: string }): Promise<PagedPostListResponse> {
+    try {
+      const response = await apiClient.get(POST_ENDPOINTS.BASE, { params });
+      const { items, total, page, totalPages, limit } = response.data.data;
+      return { data: items, total, page, totalPages, limit };
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 
-export async function getPostById(id: number): Promise<Post> {
-  const { data } = await apiClient.get<Post>(`/api/v1/posts/${id}`);
-  return data;
-}
+  async getPost(id: number): Promise<Post> {
+    try {
+      const response = await apiClient.get(POST_ENDPOINTS.DETAIL(id));
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 
-export async function createPost(body: CreatePostRequest): Promise<Post> {
-  const { data } = await apiClient.post<Post>("/api/v1/posts", body);
-  return data;
-}
+  async createPost(body: CreatePostRequest): Promise<Post> {
+    try {
+      const response = await apiClient.post(POST_ENDPOINTS.BASE, body);
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 
-export async function updatePost(id: number, body: UpdatePostRequest): Promise<Post> {
-  const { data } = await apiClient.patch<Post>(`/api/v1/posts/${id}`, body);
-  return data;
-}
+  async updatePost(id: number, body: UpdatePostRequest): Promise<Post> {
+    try {
+      const response = await apiClient.patch(POST_ENDPOINTS.DETAIL(id), body);
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 
-export async function deletePost(id: number): Promise<void> {
-  await apiClient.delete(`/api/v1/posts/${id}`);
-}
+  async deletePost(id: number): Promise<void> {
+    try {
+      await apiClient.delete(POST_ENDPOINTS.DETAIL(id));
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+};
 ```
 
 ## 입력 유효성 검증 (zod)

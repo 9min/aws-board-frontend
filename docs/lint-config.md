@@ -158,7 +158,7 @@ pre-commit:
 ### 설치
 
 ```bash
-npm install -D lefthook
+pnpm add -D lefthook
 npx lefthook install
 ```
 

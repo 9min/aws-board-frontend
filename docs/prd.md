@@ -8,18 +8,20 @@ AWS Board는 사용자들이 자유롭게 게시글을 작성하고 댓글로 �
 
 ### 배경 및 동기
 
-Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동하는 풀스택 실습 프로젝트다. AWS EC2에 백엔드를 배포하고, Vercel에 프론트엔드를 배포하는 실전 경험을 목표로 한다.
+Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동하는 풀스택 실습 프로젝트다. AWS EC2에 백엔드를 배포하고, AWS S3 정적 호스팅에 프론트엔드를 배포하는 실전 경험을 목표로 한다.
 
 ### 기술 스택
 
 | 구분 | 기술 |
 |------|------|
 | 프론트엔드 | Vite + React + TypeScript |
-| 라우팅 | TanStack Router |
+| 라우팅 | TanStack Router (파일 기반 라우팅) |
 | 서버 상태 관리 | TanStack Query (React Query) |
+| 클라이언트 상태 관리 | React Context (AuthContext) |
 | HTTP 클라이언트 | Axios (`lib/apiClient.ts`) |
 | 린트/포매팅 | Biome |
 | 테스트 | Vitest |
+| 패키지 매니저 | pnpm |
 | 백엔드 | NestJS + Prisma (별도 구성) |
 | 백엔드 서버 | AWS EC2 (`http://3.38.166.223:3000`) |
 | 프론트엔드 배포 | AWS S3 정적 호스팅 |
@@ -67,13 +69,13 @@ Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동
 
 ---
 
-### F2: 게시글 🔲 구현 예정
+### F2: 게시글 ✅ 구현 완료
 
 #### F2-1. 게시글 목록 조회
 
-- 커서 기반 페이지네이션으로 게시글 목록을 조회한다.
-- 키워드 검색을 지원한다 (`keyword` 파라미터).
-- 각 게시글에는 제목, 작성자 닉네임, 작성일, 조회수, 댓글 수를 표시한다.
+- 페이지 기반 페이지네이션(`page`, `limit`)으로 게시글 목록을 조회한다.
+- 키워드 검색을 지원한다 (`search` 파라미터).
+- 각 게시글에는 제목, 작성자 닉네임, 작성일, 조회수를 표시한다.
 - 비로그인 사용자도 조회 가능하다.
 
 #### F2-2. 게시글 상세 조회
@@ -102,7 +104,7 @@ Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동
 
 ---
 
-### F3: 댓글 🔲 구현 예정
+### F3: 댓글 ✅ 구현 완료
 
 #### F3-1. 댓글 목록 조회
 
@@ -125,7 +127,7 @@ Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동
 
 ---
 
-### F4: 파일 첨부 🔲 구현 예정
+### F4: 파일 첨부 ✅ 구현 완료
 
 - 게시글 작성/수정 시 파일을 첨부할 수 있다.
 - AWS S3 Presigned URL을 통해 클라이언트에서 직접 S3에 업로드한다.
@@ -138,13 +140,12 @@ Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동
 
 | 페이지 | 경로 | 상태 | 설명 |
 |--------|------|------|------|
-| 홈 | `/` | ✅ 구현 완료 | 서비스 진입점 (게시글 목록으로 이동 예정) |
+| 홈 (게시글 목록) | `/` | ✅ 구현 완료 | 페이지 기반 페이지네이션 + 키워드 검색 |
 | 로그인 | `/login` | ✅ 구현 완료 | 이메일/비밀번호 로그인 폼 |
 | 회원가입 | `/register` | ✅ 구현 완료 | 이메일/비밀번호/닉네임 입력 폼 |
-| 게시글 목록 | `/posts` | 🔲 구현 예정 | 커서 페이지네이션 + 키워드 검색 |
-| 게시글 상세 | `/posts/:id` | 🔲 구현 예정 | 게시글 본문 + 댓글 목록 |
-| 게시글 작성 | `/posts/new` | 🔲 구현 예정 | 제목/본문/파일 첨부 입력 폼 |
-| 게시글 수정 | `/posts/:id/edit` | 🔲 구현 예정 | 기존 내용 수정 폼 |
+| 게시글 상세 | `/posts/:postId` | ✅ 구현 완료 | 게시글 본문 + 첨부파일 + 댓글 목록 |
+| 게시글 작성 | `/posts/new` | ✅ 구현 완료 | 제목/본문/파일 첨부 입력 폼 |
+| 게시글 수정 | `/posts/:postId/edit` | ✅ 구현 완료 | 기존 내용 수정 폼 |
 
 ---
 
@@ -186,7 +187,7 @@ Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동
 
 | 메서드 | 엔드포인트 | 인증 필요 | 설명 |
 |--------|-----------|-----------|------|
-| `GET` | `/api/v1/posts` | X | 게시글 목록 조회 (`cursor`, `limit`, `keyword`) |
+| `GET` | `/api/v1/posts` | X | 게시글 목록 조회 (`page`, `limit`, `search`) |
 | `GET` | `/api/v1/posts/:id` | X | 게시글 상세 조회 |
 | `POST` | `/api/v1/posts` | O | 게시글 작성 |
 | `PATCH` | `/api/v1/posts/:id` | O | 게시글 수정 (작성자만) |
@@ -221,7 +222,12 @@ interface RegisterRequest {
 // 로그인 응답
 interface LoginResponse {
   accessToken: string;
-  user: { id: number; email: string; nickname: string; createdAt: string };
+}
+
+// 게시글 작성자
+interface PostAuthor {
+  id: number;
+  nickname: string;
 }
 
 // 게시글
@@ -230,18 +236,29 @@ interface Post {
   title: string;
   content: string;
   authorId: number;
-  authorNickname: string;
+  author: PostAuthor;
   viewCount: number;
-  commentCount: number;
-  attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
+  attachments?: Attachment[];
 }
 
-// 게시글 목록 응답 (커서 페이지네이션)
-interface PostListResponse {
+// 게시글 목록 응답 (페이지 기반 페이지네이션)
+interface PagedPostListResponse {
   data: Post[];
-  nextCursor: string | null;
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}
+
+// 첨부파일
+interface Attachment {
+  id: number;
+  postId: number;
+  key: string;
+  url: string;
+  createdAt: string;
 }
 
 // 댓글
@@ -250,6 +267,7 @@ interface Comment {
   postId: number;
   authorId: number;
   authorNickname: string;
+  author?: { id: number; nickname: string };
   content: string;
   createdAt: string;
   updatedAt: string;
@@ -273,27 +291,26 @@ interface Comment {
 | JWT 토큰 저장 및 세션 유지 | ✅ |
 | 401 응답 시 자동 로그아웃 | ✅ |
 | **게시글** | |
-| 게시글 목록 페이지 | 🔲 |
-| 커서 기반 페이지네이션 | 🔲 |
-| 키워드 검색 | 🔲 |
-| 게시글 상세 페이지 | 🔲 |
-| 게시글 작성 페이지 | 🔲 |
-| 게시글 수정 페이지 | 🔲 |
-| 게시글 삭제 | 🔲 |
+| 게시글 목록 페이지 (페이지 기반 페이지네이션) | ✅ |
+| 키워드 검색 | ✅ |
+| 게시글 상세 페이지 | ✅ |
+| 게시글 작성 페이지 | ✅ |
+| 게시글 수정 페이지 | ✅ |
+| 게시글 삭제 | ✅ |
 | **댓글** | |
-| 댓글 목록 조회 | 🔲 |
-| 댓글 작성 | 🔲 |
-| 댓글 수정 | 🔲 |
-| 댓글 삭제 | 🔲 |
+| 댓글 목록 조회 | ✅ |
+| 댓글 작성 | ✅ |
+| 댓글 수정 | ✅ |
+| 댓글 삭제 | ✅ |
 | **파일 첨부** | |
-| S3 Presigned URL 업로드 | 🔲 |
-| 첨부파일 목록 표시 | 🔲 |
+| S3 Presigned URL 업로드 | ✅ |
+| 첨부파일 목록 표시 및 삭제 | ✅ |
 | **인프라/공통** | |
-| 기본 UI 컴포넌트 (Button, Input) | ✅ |
+| 기본 UI 컴포넌트 (Button, Input, Textarea, Badge, Pagination, Skeleton) | ✅ |
 | API 클라이언트 (`lib/apiClient.ts`) | ✅ |
 | JWT 토큰 관리 (`lib/tokenStorage.ts`) | ✅ |
-| Vercel 배포 설정 | ✅ |
-| GitHub Actions CI | 🔲 |
+| AWS S3 정적 호스팅 배포 설정 | ✅ |
+| GitHub Actions CI/CD | ✅ |
 
 ---
 

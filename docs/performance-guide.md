@@ -47,81 +47,47 @@ React DevTools Profiler를 사용하여 불필요한 리렌더링을 확인한�
 2. "Highlight updates when components render" 활성화
 3. 인터랙션 수행 후 렌더링 결과 분석
 
-## Supabase 쿼리 최적화
+## REST API 요청 최적화
 
-### select 컬럼 제한
+### 불필요한 API 호출 방지
 
-필요한 컬럼만 명시적으로 선택한다.
-
-```ts
-// 좋은 예: 필요한 컬럼만 선택
-const { data } = await supabase
-  .from("todos")
-  .select("id, title, is_completed");
-
-// 나쁜 예: 모든 컬럼 선택
-const { data } = await supabase
-  .from("todos")
-  .select("*");
-```
-
-### 관계 쿼리
-
-여러 번 쿼리하는 대신 Supabase 관계 쿼리를 사용한다.
+TanStack Query의 캐싱을 활용하여 동일한 데이터에 대한 중복 요청을 방지한다.
 
 ```ts
-// 좋은 예: 관계 쿼리로 한 번에 조회
-const { data } = await supabase
-  .from("posts")
-  .select("id, title, author:profiles(name, avatar_url)");
-
-// 나쁜 예: 별도 쿼리로 N+1 문제 발생
-const { data: posts } = await supabase.from("posts").select("*");
-for (const post of posts) {
-  const { data: author } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", post.author_id)
-    .single();
+// 동일한 queryKey를 가진 컴포넌트는 캐시에서 데이터를 공유한다.
+export function usePost(id: number) {
+  return useQuery({
+    queryKey: ["posts", id],  // id가 같으면 캐시 재사용
+    queryFn: () => postService.getPost(id),
+    staleTime: 1000 * 60,     // 1분간 fresh 상태 유지
+  });
 }
 ```
 
 ### 페이지네이션
 
-```ts
-// offset 기반 페이지네이션
-const PAGE_SIZE = 20;
-const { data } = await supabase
-  .from("todos")
-  .select("id, title, created_at")
-  .order("created_at", { ascending: false })
-  .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-```
-
-커서 기반 페이지네이션은 대규모 데이터에 사용한다:
+현재 프로젝트는 페이지 기반 페이지네이션을 사용한다.
 
 ```ts
-const { data } = await supabase
-  .from("todos")
-  .select("id, title, created_at")
-  .order("created_at", { ascending: false })
-  .lt("created_at", lastCreatedAt)
-  .limit(PAGE_SIZE);
+// 페이지 기반 페이지네이션
+export function usePaginatedPosts(params: { page: number; search?: string; limit?: number }) {
+  return useQuery({
+    queryKey: ["posts", "paged", params],
+    queryFn: () => postService.getPagedPosts(params),
+  });
+}
 ```
 
-### 인덱스 가이드
+### 쿼리 무효화 범위 제한
 
-자주 필터링하거나 정렬하는 컬럼에 인덱스를 추가한다.
+캐시 무효화는 가능한 좁은 범위로 지정하여 불필요한 리페칭을 줄인다.
 
-```sql
--- 자주 필터링하는 컬럼
-CREATE INDEX idx_todos_user_id ON todos(user_id);
+```ts
+// 좋은 예: 특정 게시글만 무효화
+queryClient.invalidateQueries({ queryKey: ["posts", postId] });
 
--- 정렬에 사용하는 컬럼
-CREATE INDEX idx_todos_created_at ON todos(created_at DESC);
-
--- 복합 인덱스 (필터 + 정렬 조합)
-CREATE INDEX idx_todos_user_created ON todos(user_id, created_at DESC);
+// 범위가 넓은 예: 모든 게시글 목록 무효화 (생성/삭제 시 필요)
+queryClient.invalidateQueries({ queryKey: ["posts"] });
 ```
 
 ## 번들 크기 관리
@@ -198,22 +164,6 @@ export default defineConfig({
   width={400}
   height={300}
 />
-```
-
-### Supabase Storage 이미지 변환
-
-Supabase Storage의 이미지 변환 기능을 활용한다.
-
-```ts
-const { data } = supabase.storage
-  .from("avatars")
-  .getPublicUrl("user-avatar.jpg", {
-    transform: {
-      width: 200,
-      height: 200,
-      resize: "cover",
-    },
-  });
 ```
 
 ## 데이터 캐싱 전략

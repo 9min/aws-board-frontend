@@ -31,8 +31,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      tokenStorage.clearToken();
-      window.location.href = "/login";
+      tokenStorage.clearTokens();  // clearToken()이 아닌 clearTokens() 사용
+      const isAuthRoute = ["/login", "/register"].some((path) =>
+        window.location.pathname.startsWith(path),
+      );
+      if (!isAuthRoute) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   },
@@ -67,8 +72,8 @@ import DOMPurify from "dompurify";
 - 프로덕션에서 디버그 모드를 비활성화한다.
 - 보안 관련 HTTP 헤더를 설정한다.
 
-```ts
-// 권장 보안 헤더 (Vercel vercel.json 또는 미들웨어에서 설정)
+```json
+// 권장 보안 헤더 (AWS S3 + CloudFront 또는 서버 미들웨어에서 설정)
 {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
@@ -98,12 +103,13 @@ import DOMPurify from "dompurify";
 
 ```ts
 // src/lib/tokenStorage.ts
-const TOKEN_KEY = "access_token";
+const ACCESS_TOKEN_KEY = "access_token";
 
 export const tokenStorage = {
-  getToken: () => localStorage.getItem(TOKEN_KEY),
-  setToken: (token: string) => localStorage.setItem(TOKEN_KEY, token),
-  clearToken: () => localStorage.removeItem(TOKEN_KEY),
+  getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),
+  setAccessToken: (token: string) => localStorage.setItem(ACCESS_TOKEN_KEY, token),
+  clearTokens: () => localStorage.removeItem(ACCESS_TOKEN_KEY),
+  hasAccessToken: () => Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)),
 };
 ```
 
@@ -223,7 +229,7 @@ VITE_API_BASE_URL=
 ```ts
 // 인증 우회 테스트 예시
 it("미인증 상태에서 보호된 API를 호출하면 401 에러를 반환한다", async () => {
-  tokenStorage.clearToken();
+  tokenStorage.clearTokens();
   await expect(createPost({ title: "테스트", content: "내용" })).rejects.toThrow();
 });
 
