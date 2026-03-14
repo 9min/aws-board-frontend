@@ -86,7 +86,7 @@ function PostDetailPage() {
         <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-[hsl(var(--border))] pb-4">
           <div className="flex items-center gap-1.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-xs font-bold text-white">
-              {post.author.nickname[0].toUpperCase()}
+              {(post.author.nickname ?? '?')[0]?.toUpperCase() ?? '?'}
             </div>
             <span className="flex items-center gap-1 text-sm font-medium text-[hsl(var(--foreground))]">
               <User className="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />

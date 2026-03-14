@@ -77,7 +77,7 @@ export function CommentList({ postId, comments }: CommentListProps) {
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--accent)/0.15)] text-xs font-bold text-[hsl(var(--accent))]">
-                        {comment.authorNickname[0].toUpperCase()}
+                        {(comment.authorNickname ?? '?')[0]?.toUpperCase() ?? '?'}
                       </div>
                       <span className="text-sm font-medium text-[hsl(var(--foreground))]">
                         {comment.authorNickname}
