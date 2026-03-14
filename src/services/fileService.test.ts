@@ -80,11 +80,35 @@ describe('fileService.uploadToS3', () => {
   })
 
   it('응답이 ok가 아닐 때 에러를 throw한다', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce({ ok: false, status: 403 }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce({ ok: false, status: 403, text: async () => '' }),
+    )
     const file = new File(['content'], 'test.txt', { type: 'text/plain' })
 
     await expect(fileService.uploadToS3(mockPresigned, file)).rejects.toMatchObject({
       code: 'UPLOAD_FAILED',
+      message: '파일 업로드에 실패했습니다.',
+    })
+    vi.unstubAllGlobals()
+  })
+
+  it('S3 EntityTooLarge 응답 시 MB 단위 안내 메시지를 throw한다', async () => {
+    const xmlBody = `<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>EntityTooLarge</Code>
+  <Message>Your proposed upload exceeds the maximum allowed size</Message>
+  <MaxSizeAllowed>5242880</MaxSizeAllowed>
+</Error>`
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce({ ok: false, status: 400, text: async () => xmlBody }),
+    )
+    const file = new File(['content'], 'big.txt', { type: 'text/plain' })
+
+    await expect(fileService.uploadToS3(mockPresigned, file)).rejects.toMatchObject({
+      code: 'UPLOAD_FAILED',
+      message: '파일 크기가 5MB를 초과합니다. 5MB 이하의 파일만 업로드할 수 있습니다.',
     })
     vi.unstubAllGlobals()
   })
