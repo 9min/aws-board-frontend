@@ -29,7 +29,7 @@ function HomePage() {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-3xl flex-col px-4">
+    <div className="mx-auto flex h-full max-w-3xl flex-col px-4">
       {/* 고정 영역: 제목 + 검색 */}
       <div className="flex-shrink-0 pb-4 pt-8">
         <div className="mb-6 flex items-start justify-between">

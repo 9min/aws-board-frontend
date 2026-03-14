@@ -11,9 +11,9 @@ export const Route = createRootRoute({
 function RootLayout() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
         <Header />
-        <main>
+        <main className="flex-1 overflow-hidden">
           <Outlet />
         </main>
         {import.meta.env.DEV && (
