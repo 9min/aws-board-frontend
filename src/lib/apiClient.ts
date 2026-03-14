@@ -31,9 +31,15 @@ apiClient.interceptors.response.use(
       const status = error.response?.status
 
       if (status === 401) {
-        // 인증 만료 시 토큰 제거 및 로그인 페이지로 이동
+        // 인증 만료 시 토큰 제거
         tokenStorage.clearTokens()
-        window.location.href = '/login'
+        // 로그인/회원가입 페이지에서는 리다이렉트 불필요
+        const isAuthRoute = ['/login', '/register'].some((path) =>
+          window.location.pathname.startsWith(path),
+        )
+        if (!isAuthRoute) {
+          window.location.href = '/login'
+        }
       }
     }
     return Promise.reject(error)
