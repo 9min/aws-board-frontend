@@ -1,11 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Calendar, Eye, User } from 'lucide-react'
-import { CommentList } from '@/components/feature/comment/CommentList'
-import { FileUpload } from '@/components/feature/file/FileUpload'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
-import { useComments } from '@/hooks/useComments'
 import { useDeletePostMutation, usePost } from '@/hooks/usePosts'
 import { formatDate } from '@/utils/formatDate'
 
@@ -17,8 +14,7 @@ function PostDetailPage() {
   const { postId } = Route.useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { data: post, isLoading, isError, refetch: refetchPost } = usePost(Number(postId))
-  const { data: comments = [] } = useComments(Number(postId))
+  const { data: post, isLoading, isError } = usePost(Number(postId))
   const deleteMutation = useDeletePostMutation()
 
   if (isLoading) {
@@ -107,18 +103,6 @@ function PostDetailPage() {
           {post.content}
         </div>
       </div>
-
-      <section className="mt-6">
-        <FileUpload
-          postId={post.id}
-          existingAttachments={post.attachments ?? []}
-          onUploadComplete={() => void refetchPost()}
-        />
-      </section>
-
-      <section className="mt-6 border-t border-[hsl(var(--border))] pt-6">
-        <CommentList postId={post.id} comments={comments} />
-      </section>
     </div>
   )
 }

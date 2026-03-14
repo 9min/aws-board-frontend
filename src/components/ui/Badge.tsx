@@ -7,14 +7,10 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))]',
-        secondary:
-          'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]',
-        outline:
-          'border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]',
-        destructive:
-          'bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))]',
+        default: 'bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))]',
+        secondary: 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]',
+        outline: 'border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]',
+        destructive: 'bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))]',
       },
     },
     defaultVariants: {
@@ -23,7 +19,9 @@ const badgeVariants = cva(
   },
 )
 
-interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
+interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof badgeVariants> {}
 
 export function Badge({ className, variant, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant }), className)} {...props} />

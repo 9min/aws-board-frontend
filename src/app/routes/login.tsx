@@ -30,7 +30,9 @@ function LoginPage() {
               <Layers className="h-6 w-6 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">로그인</h1>
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">AWS Board에 오신 것을 환영합니다</p>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              AWS Board에 오신 것을 환영합니다
+            </p>
           </div>
 
           {registered === 'true' && (
@@ -47,10 +49,7 @@ function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
             계정이 없으신가요?{' '}
-            <a
-              href="/register"
-              className="font-medium text-[hsl(var(--accent))] hover:underline"
-            >
+            <a href="/register" className="font-medium text-[hsl(var(--accent))] hover:underline">
               회원가입
             </a>
           </p>

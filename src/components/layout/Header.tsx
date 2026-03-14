@@ -11,7 +11,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-sm">
       <div className="container mx-auto flex h-16 items-center px-4">
-        <Link to="/" className="flex items-center gap-2 text-lg font-bold text-[hsl(var(--foreground))]">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-lg font-bold text-[hsl(var(--foreground))]"
+        >
           <Layers className="h-5 w-5 text-[hsl(var(--accent))]" />
           <span>AWS Board</span>
         </Link>
