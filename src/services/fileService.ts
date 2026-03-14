@@ -35,6 +35,15 @@ export const fileService = {
     })
 
     if (!response.ok) {
+      const text = await response.text()
+      const maxSizeMatch = text.match(/<MaxSizeAllowed>(\d+)<\/MaxSizeAllowed>/)
+      if (maxSizeMatch) {
+        const maxMB = Math.floor(Number(maxSizeMatch[1]) / (1024 * 1024))
+        throw {
+          code: 'UPLOAD_FAILED',
+          message: `파일 크기가 ${maxMB}MB를 초과합니다. ${maxMB}MB 이하의 파일만 업로드할 수 있습니다.`,
+        }
+      }
       throw { code: 'UPLOAD_FAILED', message: '파일 업로드에 실패했습니다.' }
     }
   },
