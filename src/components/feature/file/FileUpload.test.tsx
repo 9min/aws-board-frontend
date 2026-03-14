@@ -42,12 +42,43 @@ describe('FileUpload', () => {
     vi.clearAllMocks()
   })
 
-  it('파일 선택 입력과 업로드 버튼을 렌더링한다', () => {
+  it('canEdit=true이면 파일 선택 입력과 업로드 버튼을 렌더링한다', () => {
     render(
-      <FileUpload postId={1} existingAttachments={[]} onUploadComplete={mockOnUploadComplete} />,
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit
+      />,
     )
     expect(screen.getByLabelText('파일 선택')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '업로드' })).toBeInTheDocument()
+  })
+
+  it('canEdit=false이면 파일 선택/업로드 영역을 렌더링하지 않는다', () => {
+    render(
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit={false}
+      />,
+    )
+    expect(screen.queryByLabelText('파일 선택')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '업로드' })).not.toBeInTheDocument()
+  })
+
+  it('canEdit=false이면 첨부파일 삭제 버튼이 렌더링되지 않는다', () => {
+    render(
+      <FileUpload
+        postId={1}
+        existingAttachments={[mockAttachment]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit={false}
+      />,
+    )
+    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+    expect(screen.getByText('document.pdf')).toBeInTheDocument()
   })
 
   it('기존 첨부파일 목록을 표시한다', () => {
@@ -56,6 +87,7 @@ describe('FileUpload', () => {
         postId={1}
         existingAttachments={[mockAttachment]}
         onUploadComplete={mockOnUploadComplete}
+        canEdit
       />,
     )
     expect(screen.getByText('document.pdf')).toBeInTheDocument()
@@ -67,14 +99,24 @@ describe('FileUpload', () => {
 
   it('첨부파일이 없으면 목록을 표시하지 않는다', () => {
     render(
-      <FileUpload postId={1} existingAttachments={[]} onUploadComplete={mockOnUploadComplete} />,
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit
+      />,
     )
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
   })
 
   it('파일 선택 전에는 업로드 버튼이 비활성화된다', () => {
     render(
-      <FileUpload postId={1} existingAttachments={[]} onUploadComplete={mockOnUploadComplete} />,
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit
+      />,
     )
     expect(screen.getByRole('button', { name: '업로드' })).toBeDisabled()
   })
@@ -82,7 +124,12 @@ describe('FileUpload', () => {
   it('파일 선택 후 업로드 버튼이 활성화된다', async () => {
     const user = userEvent.setup()
     render(
-      <FileUpload postId={1} existingAttachments={[]} onUploadComplete={mockOnUploadComplete} />,
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit
+      />,
     )
 
     const file = new File(['content'], 'test.txt', { type: 'text/plain' })
@@ -95,7 +142,12 @@ describe('FileUpload', () => {
     const user = userEvent.setup()
     mockUpload.mockResolvedValueOnce(mockAttachment)
     render(
-      <FileUpload postId={1} existingAttachments={[]} onUploadComplete={mockOnUploadComplete} />,
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit
+      />,
     )
 
     const file = new File(['content'], 'test.txt', { type: 'text/plain' })
@@ -111,7 +163,12 @@ describe('FileUpload', () => {
     const user = userEvent.setup()
     mockUpload.mockResolvedValueOnce(mockAttachment)
     render(
-      <FileUpload postId={1} existingAttachments={[]} onUploadComplete={mockOnUploadComplete} />,
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit
+      />,
     )
 
     const file = new File(['content'], 'document.pdf', { type: 'application/pdf' })
@@ -127,7 +184,12 @@ describe('FileUpload', () => {
     const user = userEvent.setup()
     mockUpload.mockResolvedValueOnce(null)
     render(
-      <FileUpload postId={1} existingAttachments={[]} onUploadComplete={mockOnUploadComplete} />,
+      <FileUpload
+        postId={1}
+        existingAttachments={[]}
+        onUploadComplete={mockOnUploadComplete}
+        canEdit
+      />,
     )
 
     const file = new File(['content'], 'test.txt', { type: 'text/plain' })
@@ -146,6 +208,7 @@ describe('FileUpload', () => {
         postId={1}
         existingAttachments={[mockAttachment]}
         onUploadComplete={mockOnUploadComplete}
+        canEdit
       />,
     )
     expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
@@ -159,6 +222,7 @@ describe('FileUpload', () => {
         postId={1}
         existingAttachments={[mockAttachment]}
         onUploadComplete={mockOnUploadComplete}
+        canEdit
       />,
     )
 
@@ -177,6 +241,7 @@ describe('FileUpload', () => {
         postId={1}
         existingAttachments={[mockAttachment]}
         onUploadComplete={mockOnUploadComplete}
+        canEdit
       />,
     )
 
@@ -197,6 +262,7 @@ describe('FileUpload', () => {
         postId={1}
         existingAttachments={[mockAttachment]}
         onUploadComplete={mockOnUploadComplete}
+        canEdit
       />,
     )
 

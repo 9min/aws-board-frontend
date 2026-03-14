@@ -6,6 +6,7 @@ import {
   useCreatePostMutation,
   useDeletePostMutation,
   useInfinitePosts,
+  usePaginatedPosts,
   usePost,
   useUpdatePostMutation,
 } from './usePosts'
@@ -20,6 +21,7 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/services/postService', () => ({
   postService: {
     getPosts: vi.fn(),
+    getPagedPosts: vi.fn(),
     getPost: vi.fn(),
     createPost: vi.fn(),
     updatePost: vi.fn(),
@@ -50,6 +52,51 @@ function createWrapper() {
   return ({ children }: { children: React.ReactNode }) =>
     createElement(QueryClientProvider, { client: queryClient }, children)
 }
+
+describe('usePaginatedPosts', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('page와 search를 queryKey에 포함한다', async () => {
+    const { postService } = await import('@/services/postService')
+    vi.mocked(postService.getPagedPosts).mockResolvedValue({
+      data: [mockPost],
+      total: 1,
+      page: 1,
+      totalPages: 1,
+      limit: 10,
+    })
+
+    const { result } = renderHook(() => usePaginatedPosts({ page: 1, search: '검색어' }), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.data).toEqual([mockPost])
+  })
+
+  it('postService.getPagedPosts를 올바른 파라미터로 호출한다', async () => {
+    const { postService } = await import('@/services/postService')
+    vi.mocked(postService.getPagedPosts).mockResolvedValue({
+      data: [],
+      total: 0,
+      page: 2,
+      totalPages: 5,
+      limit: 10,
+    })
+
+    const { result } = renderHook(
+      () => usePaginatedPosts({ page: 2, search: '키워드', limit: 10 }),
+      {
+        wrapper: createWrapper(),
+      },
+    )
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(postService.getPagedPosts).toHaveBeenCalledWith({ page: 2, search: '키워드', limit: 10 })
+  })
+})
 
 describe('useInfinitePosts', () => {
   beforeEach(() => {

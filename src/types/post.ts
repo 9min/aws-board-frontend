@@ -29,9 +29,18 @@ export interface PostSearchParams {
   cursor?: number
   limit?: number
   search?: string
+  page?: number
 }
 
 export interface PostListResponse {
   data: Post[]
   nextCursor: number | null
+}
+
+export interface PagedPostListResponse {
+  data: Post[]
+  total: number
+  page: number
+  totalPages: number
+  limit: number
 }
