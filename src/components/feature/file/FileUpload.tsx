@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { Paperclip, Trash2, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { useDeleteAttachment } from '@/hooks/useDeleteAttachment'
@@ -53,36 +54,45 @@ export function FileUpload({ postId, existingAttachments, onUploadComplete }: Fi
   }
 
   return (
-    <div className="mt-4">
-      <h3 className="mb-2 text-base font-semibold">첨부파일</h3>
+    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-sm">
+      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--foreground))]">
+        <Paperclip className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+        첨부파일
+      </h3>
 
       {attachments.length > 0 && (
-        <ul className="mb-3 space-y-1">
+        <ul className="mb-3 space-y-1.5">
           {attachments.map((attachment) => (
-            <li key={attachment.id} className="flex items-center gap-2 text-sm">
+            <li
+              key={attachment.id}
+              className="flex items-center gap-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.4)] px-3 py-2 text-sm"
+            >
+              <Paperclip className="h-3.5 w-3.5 shrink-0 text-[hsl(var(--muted-foreground))]" />
               <a
                 href={attachment.url}
                 download={attachment.key.split('/').pop()}
-                className="text-blue-600 hover:underline"
+                className="flex-1 truncate text-[hsl(var(--accent))] hover:underline"
               >
                 {attachment.key.split('/').pop()}
               </a>
-              <span className="text-muted-foreground">({formatDate(attachment.createdAt)})</span>
-              <Button
+              <span className="shrink-0 text-xs text-[hsl(var(--muted-foreground))]">
+                {formatDate(attachment.createdAt)}
+              </span>
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
                 onClick={() => void handleDelete(attachment)}
-                isLoading={deletingId === attachment.id}
+                disabled={deletingId === attachment.id}
+                className="shrink-0 cursor-pointer rounded p-0.5 text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--destructive))] disabled:opacity-50"
+                aria-label="삭제"
               >
-                삭제
-              </Button>
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="rounded-lg border border-dashed border-border p-4">
+      <div className="rounded-lg border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.3)] p-3">
         <input
           ref={inputRef}
           type="file"
@@ -99,7 +109,7 @@ export function FileUpload({ postId, existingAttachments, onUploadComplete }: Fi
           >
             파일 선택
           </Button>
-          <span className="text-sm text-muted-foreground">
+          <span className="flex-1 truncate text-sm text-[hsl(var(--muted-foreground))]">
             {selectedFile ? selectedFile.name : '선택된 파일 없음'}
           </span>
           <Button
@@ -108,15 +118,16 @@ export function FileUpload({ postId, existingAttachments, onUploadComplete }: Fi
             onClick={() => void handleUpload()}
             isLoading={isUploading}
             disabled={!selectedFile}
-            className="ml-auto"
+            className="shrink-0 flex items-center gap-1.5"
           >
+            <Upload className="h-3.5 w-3.5" />
             업로드
           </Button>
         </div>
       </div>
 
       {error && (
-        <p role="alert" className="mt-1 text-sm text-red-600">
+        <p role="alert" className="mt-2 text-sm text-[hsl(var(--destructive))]">
           {error}
         </p>
       )}

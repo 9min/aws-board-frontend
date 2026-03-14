@@ -33,7 +33,11 @@ export function CommentForm({
   const [fieldError, setFieldError] = useState<string | undefined>(undefined)
 
   if (!isAuthenticated) {
-    return <p className="text-sm text-muted-foreground">로그인 후 댓글을 작성할 수 있습니다.</p>
+    return (
+      <p className="text-sm text-[hsl(var(--muted-foreground))]">
+        로그인 후 댓글을 작성할 수 있습니다.
+      </p>
+    )
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
