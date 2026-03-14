@@ -45,3 +45,12 @@ coverage/
 
 # TypeScript 캐시
 *.tsbuildinfo
+
+# 최상위 경로 이미지 파일
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.svg
+/*.webp
+/*.ico
