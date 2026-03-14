@@ -3,6 +3,23 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PostForm } from './PostForm'
 
+// FileUpload 컴포넌트 mock
+vi.mock('../file/FileUpload', () => ({
+  FileUpload: ({
+    postId,
+    existingAttachments,
+  }: {
+    postId: number
+    existingAttachments: unknown[]
+  }) => (
+    <div
+      data-testid="file-upload"
+      data-post-id={postId}
+      data-attachment-count={existingAttachments.length}
+    />
+  ),
+}))
+
 describe('PostForm', () => {
   const mockOnSubmit = vi.fn()
 
@@ -85,16 +102,16 @@ describe('PostForm', () => {
     })
   })
 
-  it('제목이 100자를 초과하면 유효성 에러를 표시한다', async () => {
+  it('제목이 200자를 초과하면 유효성 에러를 표시한다', async () => {
     const user = userEvent.setup()
     render(<PostForm onSubmit={mockOnSubmit} isLoading={false} />)
 
-    await user.type(screen.getByLabelText('제목'), 'a'.repeat(101))
+    await user.type(screen.getByLabelText('제목'), 'a'.repeat(201))
     await user.type(screen.getByLabelText('내용'), '내용')
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     await waitFor(() => {
-      expect(screen.getByText('제목은 100자 이하로 입력해주세요.')).toBeInTheDocument()
+      expect(screen.getByText('제목은 200자 이하로 입력해주세요.')).toBeInTheDocument()
     })
     expect(mockOnSubmit).not.toHaveBeenCalled()
   })
@@ -102,5 +119,18 @@ describe('PostForm', () => {
   it('isLoading이 true이면 버튼이 비활성화된다', () => {
     render(<PostForm onSubmit={mockOnSubmit} isLoading={true} />)
     expect(screen.getByRole('button', { name: /저장/ })).toBeDisabled()
+  })
+
+  describe('파일 첨부 섹션', () => {
+    it('postId가 없으면 FileUpload를 렌더링하지 않는다', () => {
+      render(<PostForm onSubmit={mockOnSubmit} isLoading={false} />)
+      expect(screen.queryByTestId('file-upload')).not.toBeInTheDocument()
+    })
+
+    it('postId가 있으면 FileUpload를 렌더링한다', () => {
+      render(<PostForm onSubmit={mockOnSubmit} isLoading={false} postId={42} attachments={[]} />)
+      expect(screen.getByTestId('file-upload')).toBeInTheDocument()
+      expect(screen.getByTestId('file-upload')).toHaveAttribute('data-post-id', '42')
+    })
   })
 })
