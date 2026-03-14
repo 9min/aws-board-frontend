@@ -1,150 +1,120 @@
 # CI/CD 설정 가이드
 
-## Vercel 자동 배포
+## 전체 구조
 
-### 기본 설정
+| 환경 | 인프라 | 트리거 |
+|------|--------|--------|
+| 로컬 개발 | localhost:5173 (Vite) | - |
+| 프로덕션 | AWS S3 (정적 호스팅) | `main` 머지 |
 
-- `main` 브랜치 푸시 시 프로덕션 자동 배포
-- PR 생성 시 Preview 배포 자동 생성
-- Preview URL은 PR 코멘트에 자동 첨부
+백엔드는 AWS EC2(`http://3.38.166.223:3000`)에서 별도 운영한다.
 
-### 배포 환경 구분
+## GitHub Actions 워크플로우
 
-| 환경 | 트리거 | URL 패턴 |
-|------|--------|---------|
-| Production | `main` 머지 | `project.vercel.app` |
-| Preview | PR 생성/업데이트 | `project-{hash}.vercel.app` |
-| Development | 로컬 | `localhost:5173` |
+### 파이프라인 구성
 
-### Preview 배포 활용
+```
+PR 생성/업데이트       → lint → type-check → test → build (검증만)
+main 머지 (push)  → lint → type-check → test → build → deploy (S3)
+```
 
-- PR 리뷰 시 Preview URL로 실제 동작을 확인한다.
-- QA 팀과 Preview URL을 공유하여 사전 검증한다.
-- Preview 배포에는 스테이징 백엔드 URL 환경변수를 사용한다.
+| Job | 실행 시점 | 설명 |
+|-----|-----------|------|
+| `lint` | PR + main push | Biome 린트/포매팅 검사 |
+| `type-check` | PR + main push | TypeScript 타입 검사 |
+| `test` | PR + main push | Vitest 테스트 실행 |
+| `build` | PR + main push | 빌드 성공 확인, 결과물 artifact 저장 |
+| `deploy` | main push만 | S3에 빌드 결과물 업로드 |
+
+### deploy Job 조건
+
+```yaml
+if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+```
+
+PR에서는 deploy가 실행되지 않는다.
+
+## GitHub Secrets 설정
+
+GitHub 저장소 → Settings → Secrets and variables → Actions 에서 등록한다.
+
+| Secret | 설명 | 예시 |
+|--------|------|------|
+| `VITE_API_BASE_URL` | 프로덕션 백엔드 URL | `http://3.38.166.223:3000` |
+| `AWS_ACCESS_KEY_ID` | AWS IAM 액세스 키 | `AKIA...` |
+| `AWS_SECRET_ACCESS_KEY` | AWS IAM 시크릿 키 | - |
+| `AWS_REGION` | S3 버킷 리전 | `ap-northeast-2` |
+| `AWS_S3_BUCKET` | 프론트엔드 S3 버킷명 | `aws-board-frontend` |
+
+### IAM 권한 최소화
+
+배포용 IAM 사용자에게는 S3 버킷 접근 권한만 부여한다.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::aws-board-frontend",
+        "arn:aws:s3:::aws-board-frontend/*"
+      ]
+    }
+  ]
+}
+```
+
+## S3 정적 호스팅 설정
+
+### SPA 라우팅 처리
+
+TanStack Router는 클라이언트 사이드 라우팅을 사용하므로, S3에서 404 응답을 `index.html`로 리다이렉트해야 한다.
+
+S3 버킷 → 속성 → 정적 웹 사이트 호스팅:
+
+| 항목 | 값 |
+|------|-----|
+| 인덱스 문서 | `index.html` |
+| 오류 문서 | `index.html` |
+
+### 버킷 퍼블릭 접근 설정
+
+정적 호스팅용 버킷은 퍼블릭 읽기를 허용해야 한다.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::aws-board-frontend/*"
+    }
+  ]
+}
+```
 
 ## 환경변수 관리
 
-### Vercel 환경변수 설정
-
-각 환경변수에 적용 범위를 지정한다:
-
-| 스코프 | 용도 |
-|--------|------|
-| Production | 프로덕션 환경에만 적용 |
-| Preview | Preview 배포에만 적용 |
-| Development | `vercel dev` 실행 시 적용 |
-
-### 환경별 API Base URL
-
-| 환경 | VITE_API_BASE_URL |
-|------|------------------|
-| Production | 프로덕션 백엔드 URL |
-| Preview | 스테이징 백엔드 URL |
-| Development | `http://3.38.166.223:3000` (또는 로컬 백엔드) |
-
-### 민감 정보 관리
-
-- 시크릿은 Vercel 대시보드에서 직접 설정한다.
-- `vercel env pull`로 로컬에 동기화할 수 있다.
-- `.env*.local` 파일은 `.gitignore`에 포함한다.
-
-## GitHub Actions 연동
-
-### 기본 워크플로우
-
-PR 생성 및 업데이트 시 다음을 자동 실행한다:
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  lint:
-    name: 린트 검사
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-      - run: npm ci
-      - run: npx biome check .
-
-  type-check:
-    name: 타입 검사
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-      - run: npm ci
-      - run: npx tsc --noEmit
-
-  test:
-    name: 테스트
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-      - run: npm ci
-      - run: npx vitest run --coverage
-
-  build:
-    name: 빌드
-    runs-on: ubuntu-latest
-    needs: [lint, type-check, test]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build
-        env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-```
-
-### 워크플로우 구성
-
-| Job | 설명 | 필수 |
-|-----|------|------|
-| `lint` | Biome 린트/포매팅 검사 | O |
-| `type-check` | TypeScript 타입 검사 | O |
-| `test` | Vitest 테스트 실행 | O |
-| `build` | 빌드 성공 확인 | O |
-
-### 브랜치 보호 규칙과 연동
-
-GitHub 저장소 설정에서 다음 상태 체크를 필수로 지정한다:
-
-- `lint`
-- `type-check`
-- `test`
-- `build`
-
-모든 체크가 통과해야 PR 머지가 가능하다.
+| 파일 | 용도 | Git 추적 |
+|------|------|----------|
+| `.env.example` | 키 목록 (값 없음) | O |
+| `.env.local` | 로컬 개발용 (`http://localhost:3000`) | X |
+| GitHub Secrets | 프로덕션 빌드 시 주입 | - |
 
 ## 배포 체크리스트
 
 ### 프로덕션 배포 전 확인 사항
 
-- [ ] 모든 CI 체크 통과
+- [ ] 모든 CI 체크 통과 (lint, type-check, test, build)
 - [ ] PR 리뷰 승인 완료
-- [ ] Preview 배포에서 기능 검증 완료
-- [ ] Vercel 환경변수 설정 확인 (`VITE_API_BASE_URL`)
-- [ ] 백엔드 팀과 API 스펙 변경 사항 확인
-- [ ] 롤백 계획 수립
+- [ ] GitHub Secrets 설정 확인 (`VITE_API_BASE_URL`, `AWS_*`)
+- [ ] S3 버킷 정적 호스팅 설정 확인 (오류 문서 → `index.html`)
+- [ ] 백엔드 API 스펙 변경 사항 확인
+- [ ] 롤백 계획 수립 (이전 빌드 결과물 보관)
 
 ## 관련 문서
 
