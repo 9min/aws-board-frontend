@@ -54,13 +54,20 @@ pnpm dev
 | `pnpm lint:fix` | 린트 자동 수정 |
 | `pnpm format` | 코드 포매팅 |
 
+## 배포
+
+| 구분 | URL |
+|------|-----|
+| 프론트엔드 | https://d1l6sa4whwygwi.cloudfront.net |
+| 백엔드 API | https://dibhzpfpsg3ou.cloudfront.net |
+
 ## 주요 기능
 
 - 회원가입 / 로그인 (JWT 인증)
 - 게시글 CRUD + 페이지네이션 + 키워드 검색
 - 댓글 CRUD
 - AWS S3 파일 첨부 (Presigned URL)
-- AWS S3 정적 호스팅 + GitHub Actions CI/CD
+- AWS S3 정적 호스팅 + CloudFront + GitHub Actions CI/CD
 
 ## 프로젝트 구조
 
