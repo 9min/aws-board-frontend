@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/utils/cn'
 
 export function Header() {
-  const { isLoading, isAuthenticated, user, logout } = useAuth()
+  const { isLoading, isAuthenticated, isAdmin, user, logout } = useAuth()
   const routerState = useRouterState()
   const currentPath = routerState.location.pathname
 
@@ -35,6 +35,19 @@ export function Header() {
 
             {isAuthenticated ? (
               <>
+                {isAdmin && (
+                  <Link
+                    to="/admin/dashboard"
+                    className={cn(
+                      'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                      currentPath.startsWith('/admin')
+                        ? 'bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))]'
+                        : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]',
+                    )}
+                  >
+                    관리자
+                  </Link>
+                )}
                 <div className="ml-2 flex items-center gap-2 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--muted))] px-3 py-1.5">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-xs font-bold text-white">
                     {(user?.nickname ?? user?.email ?? '?')[0].toUpperCase()}

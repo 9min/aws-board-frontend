@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
+import { authService } from '@/services/authService'
 import { tokenStorage } from '@/lib/tokenStorage'
 import type { AuthUser, LoginResponse } from '@/types/auth'
-import { decodeJwtPayload } from '@/utils/jwtDecode'
 
 interface AuthContextType {
   user: AuthUser | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (response: LoginResponse) => void
+  isAdmin: boolean
+  login: (response: LoginResponse) => Promise<void>
   logout: () => void
 }
 
@@ -21,22 +22,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = tokenStorage.getAccessToken()
     if (token) {
-      const payload = decodeJwtPayload(token)
-      if (payload && payload.exp * 1000 > Date.now()) {
-        setUser({ id: payload.sub, email: payload.email })
-      } else {
-        tokenStorage.clearTokens()
-      }
+      authService
+        .getMe()
+        .then((me) =>
+          setUser({
+            id: me.id,
+            email: me.email,
+            nickname: me.nickname,
+            isAdmin: me.isAdmin,
+            createdAt: me.createdAt,
+          }),
+        )
+        .catch(() => tokenStorage.clearTokens())
+        .finally(() => setIsLoading(false))
+    } else {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
 
-  const login = (response: LoginResponse) => {
+  const login = async (response: LoginResponse): Promise<void> => {
     tokenStorage.setAccessToken(response.accessToken)
-    const payload = decodeJwtPayload(response.accessToken)
-    if (payload) {
-      setUser({ id: payload.sub, email: payload.email })
-    }
+    const me = await authService.getMe()
+    setUser({
+      id: me.id,
+      email: me.email,
+      nickname: me.nickname,
+      isAdmin: me.isAdmin,
+      createdAt: me.createdAt,
+    })
   }
 
   const logout = () => {
@@ -46,7 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, isAuthenticated: user !== null, login, logout }}
+      value={{
+        user,
+        isLoading,
+        isAuthenticated: user !== null,
+        isAdmin: user?.isAdmin === true,
+        login,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
