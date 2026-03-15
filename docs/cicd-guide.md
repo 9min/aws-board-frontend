@@ -5,7 +5,7 @@
 | 환경 | 인프라 | 트리거 |
 |------|--------|--------|
 | 로컬 개발 | localhost:5173 (Vite) | - |
-| 프로덕션 | AWS S3 (정적 호스팅) | `main` 머지 |
+| 프로덕션 | AWS S3 + CloudFront (`https://d1l6sa4whwygwi.cloudfront.net`) | `main` 머지 |
 
 패키지 매니저는 **pnpm**을 사용한다. CI 워크플로우는 `pnpm/action-setup`을 통해 pnpm을 설치하고 `pnpm install --frozen-lockfile`로 의존성을 고정한다.
 
