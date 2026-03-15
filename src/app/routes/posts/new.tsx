@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { FileUpload } from '@/components/feature/file/FileUpload'
 import { PostForm } from '@/components/feature/post/PostForm'
 import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/contexts/AuthContext'
 import { tokenStorage } from '@/lib/tokenStorage'
 import { postService } from '@/services/postService'
 import type { Post } from '@/types/post'
@@ -22,6 +23,7 @@ export const Route = createFileRoute('/posts/new')({
 function NewPostPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { isAdmin } = useAuth()
   const [createdPost, setCreatedPost] = useState<Post | null>(null)
 
   const createMutation = useMutation({
@@ -65,9 +67,11 @@ function NewPostPage() {
             error={createMutation.isError ? getErrorMessage(createMutation.error) : undefined}
             submitLabel="게시하기"
           />
-          <p className="mt-3 text-xs text-[hsl(var(--muted-foreground))]">
-            * 첨부파일은 게시 후 추가할 수 있습니다.
-          </p>
+          {isAdmin && (
+            <p className="mt-3 text-xs text-[hsl(var(--muted-foreground))]">
+              * 첨부파일은 게시 후 추가할 수 있습니다.
+            </p>
+          )}
         </div>
       ) : (
         /* ── 2단계: 파일 첨부 ── */
@@ -94,11 +98,14 @@ function NewPostPage() {
             </p>
           </div>
 
-          <FileUpload
-            postId={createdPost.id}
-            existingAttachments={[]}
-            onUploadComplete={() => {}}
-          />
+          {isAdmin && (
+            <FileUpload
+              postId={createdPost.id}
+              existingAttachments={[]}
+              onUploadComplete={() => {}}
+              canEdit={true}
+            />
+          )}
         </div>
       )}
     </div>
