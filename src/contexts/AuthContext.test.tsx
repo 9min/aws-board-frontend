@@ -35,7 +35,7 @@ function TestConsumer() {
       <div data-testid="user">{user?.email ?? 'none'}</div>
       <div data-testid="authenticated">{isAuthenticated ? 'yes' : 'no'}</div>
       <div data-testid="admin">{isAdmin ? 'yes' : 'no'}</div>
-      <button type="button" onClick={() => void login({ accessToken: VALID_TOKEN })}>
+      <button type="button" onClick={() => { login({ accessToken: VALID_TOKEN }).catch(() => undefined) }}>
         login
       </button>
       <button type="button" onClick={logout}>
@@ -102,6 +102,30 @@ describe('AuthProvider', () => {
       expect(screen.getByTestId('loading')).toHaveTextContent('done')
     })
     expect(tokenStorage.clearTokens).toHaveBeenCalled()
+    expect(screen.getByTestId('user')).toHaveTextContent('none')
+  })
+
+  it('login 중 getMe 실패 시 토큰을 제거하고 에러를 throw한다', async () => {
+    const { tokenStorage } = await import('@/lib/tokenStorage')
+    const { authService } = await import('@/services/authService')
+    vi.mocked(tokenStorage.getAccessToken).mockReturnValue(null)
+    vi.mocked(authService.getMe).mockRejectedValue({ code: 'UNAUTHORIZED', message: '인증 실패' })
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('done')
+    })
+
+    fireEvent.click(screen.getByText('login'))
+
+    await waitFor(() => {
+      expect(tokenStorage.clearTokens).toHaveBeenCalled()
+    })
     expect(screen.getByTestId('user')).toHaveTextContent('none')
   })
 

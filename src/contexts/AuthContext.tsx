@@ -42,14 +42,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (response: LoginResponse): Promise<void> => {
     tokenStorage.setAccessToken(response.accessToken)
-    const me = await authService.getMe()
-    setUser({
-      id: me.id,
-      email: me.email,
-      nickname: me.nickname,
-      isAdmin: me.isAdmin,
-      createdAt: me.createdAt,
-    })
+    try {
+      const me = await authService.getMe()
+      setUser({
+        id: me.id,
+        email: me.email,
+        nickname: me.nickname,
+        isAdmin: me.isAdmin,
+        createdAt: me.createdAt,
+      })
+    } catch (error) {
+      tokenStorage.clearTokens()
+      throw error
+    }
   }
 
   const logout = () => {
