@@ -9,7 +9,7 @@
 
 패키지 매니저는 **pnpm**을 사용한다. CI 워크플로우는 `pnpm/action-setup`을 통해 pnpm을 설치하고 `pnpm install --frozen-lockfile`로 의존성을 고정한다.
 
-백엔드는 AWS EC2(`http://3.38.166.223:3000`)에서 별도 운영한다.
+백엔드는 AWS EC2(`https://dibhzpfpsg3ou.cloudfront.net`)에서 별도 운영한다.
 
 ## GitHub Actions 워크플로우
 
@@ -42,7 +42,7 @@ GitHub 저장소 → Settings → Secrets and variables → Actions 에서 등�
 
 | Secret | 설명 | 예시 |
 |--------|------|------|
-| `VITE_API_BASE_URL` | 프로덕션 백엔드 URL | `http://3.38.166.223:3000` |
+| `VITE_API_BASE_URL` | 프로덕션 백엔드 URL | `https://dibhzpfpsg3ou.cloudfront.net` |
 | `AWS_ACCESS_KEY_ID` | AWS IAM 액세스 키 | `AKIA...` |
 | `AWS_SECRET_ACCESS_KEY` | AWS IAM 시크릿 키 | - |
 | `AWS_REGION` | S3 버킷 리전 | `ap-northeast-2` |
@@ -104,7 +104,7 @@ S3 버킷 → 속성 → 정적 웹 사이트 호스팅:
 | 파일 | 용도 | Git 추적 |
 |------|------|----------|
 | `.env.example` | 키 목록 (값 없음) | O |
-| `.env.local` | 로컬 개발용 (`http://3.38.166.223:3000`) | X |
+| `.env.local` | 로컬 개발용 (`https://dibhzpfpsg3ou.cloudfront.net`) | X |
 | GitHub Secrets | 프로덕션 빌드 시 주입 | - |
 
 ## 배포 체크리스트

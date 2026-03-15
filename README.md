@@ -38,7 +38,7 @@ pnpm dev
 
 | 변수명 | 설명 | 기본값 |
 |--------|------|--------|
-| `VITE_API_BASE_URL` | 백엔드 API 서버 주소 | `http://3.38.166.223:3000` |
+| `VITE_API_BASE_URL` | 백엔드 API 서버 주소 | `https://dibhzpfpsg3ou.cloudfront.net` |
 
 ## 스크립트
 
