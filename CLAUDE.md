@@ -3,7 +3,7 @@
 ## 기술 스택
 
 - **프론트엔드**: Vite + React + TypeScript
-- **백엔드**: NestJS + Prisma + AWS (별도 구성, `http://3.38.166.223:3000`)
+- **백엔드**: NestJS + Prisma + AWS (별도 구성, `https://dibhzpfpsg3ou.cloudfront.net`)
 - **린트/포매팅**: Biome
 - **테스트**: Vitest
 - **배포**: AWS S3 정적 호스팅 (프론트엔드) / AWS EC2 (백엔드)

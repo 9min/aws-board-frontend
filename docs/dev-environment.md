@@ -20,7 +20,7 @@
 ### .env.local 구성 예시
 
 ```
-VITE_API_BASE_URL=http://3.38.166.223:3000
+VITE_API_BASE_URL=https://dibhzpfpsg3ou.cloudfront.net
 ```
 
 백엔드 API의 Base URL을 설정한다. 로컬 개발 시에도 실제 백엔드 서버 URL을 사용한다.
@@ -29,7 +29,7 @@ VITE_API_BASE_URL=http://3.38.166.223:3000
 
 | 환경 | API_BASE_URL | 관리 방식 |
 |------|-------------|----------|
-| 로컬 | `http://3.38.166.223:3000` (또는 로컬 백엔드) | `.env.local` |
+| 로컬 | `https://dibhzpfpsg3ou.cloudfront.net` (또는 로컬 백엔드) | `.env.local` |
 | Production | 프로덕션 백엔드 URL | GitHub Secrets (`VITE_API_BASE_URL`) |
 
 ## IDE 설정
