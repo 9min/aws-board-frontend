@@ -14,6 +14,15 @@ export interface AuthUser {
   email: string
   nickname?: string
   createdAt?: string
+  isAdmin: boolean
+}
+
+export interface MeResponse {
+  id: number
+  email: string
+  nickname: string
+  isAdmin: boolean
+  createdAt: string
 }
 
 export interface LoginResponse {

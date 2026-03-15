@@ -1,6 +1,17 @@
 export const AUTH_ENDPOINTS = {
   REGISTER: '/api/v1/auth/register',
   LOGIN: '/api/v1/auth/login',
+  ME: '/api/v1/auth/me',
+} as const
+
+export const ADMIN_ENDPOINTS = {
+  DASHBOARD: '/api/v1/admin/dashboard',
+  USERS: '/api/v1/admin/users',
+  USER_DETAIL: (id: number) => `/api/v1/admin/users/${id}`,
+  POSTS: '/api/v1/admin/posts',
+  POST_DETAIL: (id: number) => `/api/v1/admin/posts/${id}`,
+  COMMENTS: '/api/v1/admin/comments',
+  COMMENT_DETAIL: (id: number) => `/api/v1/admin/comments/${id}`,
 } as const
 
 export const POST_ENDPOINTS = {

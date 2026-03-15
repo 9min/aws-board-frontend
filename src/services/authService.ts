@@ -1,12 +1,27 @@
 import { AUTH_ENDPOINTS } from '@/constants/apiEndpoints'
 import { apiClient } from '@/lib/apiClient'
-import type { LoginRequest, LoginResponse, RegisterRequest } from '@/types/auth'
+import type { LoginRequest, LoginResponse, MeResponse, RegisterRequest } from '@/types/auth'
 import { handleApiError } from '@/utils/error'
+
+interface ApiEnvelope<T> {
+  data: T
+  error: string | null
+  meta: unknown
+}
 
 export const authService = {
   async register(body: RegisterRequest): Promise<void> {
     try {
       await apiClient.post(AUTH_ENDPOINTS.REGISTER, body)
+    } catch (error) {
+      throw handleApiError(error)
+    }
+  },
+
+  async getMe(): Promise<MeResponse> {
+    try {
+      const response = await apiClient.get<ApiEnvelope<MeResponse>>(AUTH_ENDPOINTS.ME)
+      return response.data.data
     } catch (error) {
       throw handleApiError(error)
     }
