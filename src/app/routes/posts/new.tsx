@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { FileUpload } from '@/components/feature/file/FileUpload'
 import { PostForm } from '@/components/feature/post/PostForm'
 import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/contexts/AuthContext'
 import { tokenStorage } from '@/lib/tokenStorage'
 import { postService } from '@/services/postService'
 import type { Post } from '@/types/post'
@@ -22,6 +23,7 @@ export const Route = createFileRoute('/posts/new')({
 function NewPostPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { isAdmin } = useAuth()
   const [createdPost, setCreatedPost] = useState<Post | null>(null)
 
   const createMutation = useMutation({
@@ -65,9 +67,11 @@ function NewPostPage() {
             error={createMutation.isError ? getErrorMessage(createMutation.error) : undefined}
             submitLabel="게시하기"
           />
-          <p className="mt-3 text-xs text-[hsl(var(--muted-foreground))]">
-            * 첨부파일은 게시 후 추가할 수 있습니다.
-          </p>
+          {isAdmin && (
+            <p className="mt-3 text-xs text-[hsl(var(--muted-foreground))]">
+              * 첨부파일은 게시 후 추가할 수 있습니다.
+            </p>
+          )}
         </div>
       ) : (
         /* ── 2단계: 파일 첨부 ── */
@@ -77,7 +81,9 @@ function NewPostPage() {
             <div className="flex-1">
               <p className="text-sm font-semibold text-green-800">게시글이 등록되었습니다!</p>
               <p className="text-xs text-green-700">
-                아래에서 첨부파일을 추가하거나 바로 게시물을 확인하세요.
+                {isAdmin
+                  ? '아래에서 첨부파일을 추가하거나 바로 게시물을 확인하세요.'
+                  : '바로 게시물을 확인하세요.'}
               </p>
             </div>
             <Button size="sm" onClick={handleViewPost}>
@@ -94,11 +100,14 @@ function NewPostPage() {
             </p>
           </div>
 
-          <FileUpload
-            postId={createdPost.id}
-            existingAttachments={[]}
-            onUploadComplete={() => {}}
-          />
+          {isAdmin && (
+            <FileUpload
+              postId={createdPost.id}
+              existingAttachments={[]}
+              onUploadComplete={() => {}}
+              canEdit={true}
+            />
+          )}
         </div>
       )}
     </div>

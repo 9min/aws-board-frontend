@@ -16,7 +16,7 @@ export const Route = createFileRoute('/posts/$postId/')({
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const { data: post, isLoading, isError, refetch: refetchPost } = usePost(Number(postId))
   const { data: comments = [] } = useComments(Number(postId))
   const deleteMutation = useDeletePostMutation()
@@ -132,7 +132,7 @@ function PostDetailPage() {
           postId={post.id}
           existingAttachments={post.attachments ?? []}
           onUploadComplete={() => void refetchPost()}
-          canEdit={isAuthor}
+          canEdit={isAdmin && isAuthor}
         />
       </section>
 
