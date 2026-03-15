@@ -23,7 +23,7 @@ Vite + React + TypeScript 프론트엔드와 NestJS + Prisma 백엔드를 연동
 | 테스트 | Vitest |
 | 패키지 매니저 | pnpm |
 | 백엔드 | NestJS + Prisma (별도 구성) |
-| 백엔드 서버 | AWS EC2 (`https://dibhzpfpsg3ou.cloudfront.net`) |
+| 백엔드 서버 | AWS EC2 (CloudFront: `https://dibhzpfpsg3ou.cloudfront.net`) |
 | 프론트엔드 배포 | AWS S3 정적 호스팅 |
 | 파일 저장소 | AWS S3 (Presigned URL 기반) |
 

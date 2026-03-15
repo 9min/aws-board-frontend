@@ -9,7 +9,7 @@
 
 패키지 매니저는 **pnpm**을 사용한다. CI 워크플로우는 `pnpm/action-setup`을 통해 pnpm을 설치하고 `pnpm install --frozen-lockfile`로 의존성을 고정한다.
 
-백엔드는 AWS EC2(`https://dibhzpfpsg3ou.cloudfront.net`)에서 별도 운영한다.
+백엔드는 AWS EC2에서 별도 운영하며, CloudFront(`https://dibhzpfpsg3ou.cloudfront.net`)를 통해 접근한다.
 
 ## GitHub Actions 워크플로우
 
