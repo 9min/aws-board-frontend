@@ -81,7 +81,9 @@ function NewPostPage() {
             <div className="flex-1">
               <p className="text-sm font-semibold text-green-800">게시글이 등록되었습니다!</p>
               <p className="text-xs text-green-700">
-                {isAdmin ? '아래에서 첨부파일을 추가하거나 바로 게시물을 확인하세요.' : '바로 게시물을 확인하세요.'}
+                {isAdmin
+                  ? '아래에서 첨부파일을 추가하거나 바로 게시물을 확인하세요.'
+                  : '바로 게시물을 확인하세요.'}
               </p>
             </div>
             <Button size="sm" onClick={handleViewPost}>
