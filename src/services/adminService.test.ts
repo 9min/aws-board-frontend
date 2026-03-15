@@ -47,11 +47,17 @@ const mockComment = {
 }
 
 const mockPagedResponse = <T>(items: T[]) => ({
-  data: { data: { items, total: items.length, page: 1, totalPages: 1, limit: 10 }, error: null, meta: null },
+  data: {
+    data: { items, total: items.length, page: 1, totalPages: 1, limit: 10 },
+    error: null,
+    meta: null,
+  },
 })
 
 describe('adminService.getDashboard', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 대시보드 통계를 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -72,7 +78,9 @@ describe('adminService.getDashboard', () => {
 })
 
 describe('adminService.getUsers', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 회원 목록을 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -95,7 +103,9 @@ describe('adminService.getUsers', () => {
 })
 
 describe('adminService.getUser', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 회원 상세를 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -116,7 +126,9 @@ describe('adminService.getUser', () => {
 })
 
 describe('adminService.deleteUser', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 void를 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -134,7 +146,9 @@ describe('adminService.deleteUser', () => {
 })
 
 describe('adminService.getPosts', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 게시글 목록을 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -156,7 +170,9 @@ describe('adminService.getPosts', () => {
 })
 
 describe('adminService.getPost', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 게시글 상세를 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -170,7 +186,9 @@ describe('adminService.getPost', () => {
 })
 
 describe('adminService.deletePost', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 void를 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -188,7 +206,9 @@ describe('adminService.deletePost', () => {
 })
 
 describe('adminService.getComments', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 댓글 목록을 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')
@@ -210,7 +230,9 @@ describe('adminService.getComments', () => {
 })
 
 describe('adminService.deleteComment', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 void를 반환한다', async () => {
     const { apiClient } = await import('@/lib/apiClient')

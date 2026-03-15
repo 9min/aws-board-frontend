@@ -85,7 +85,9 @@ function createWrapper() {
 }
 
 describe('useAdminDashboard', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 대시보드 통계를 반환한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -99,7 +101,9 @@ describe('useAdminDashboard', () => {
 })
 
 describe('useAdminUsers', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('page와 search를 파라미터로 받아 회원 목록을 반환한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -113,7 +117,9 @@ describe('useAdminUsers', () => {
 })
 
 describe('useAdminUser', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 회원 상세를 반환한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -127,7 +133,9 @@ describe('useAdminUser', () => {
 })
 
 describe('useAdminPosts', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 게시글 목록을 반환한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -141,7 +149,9 @@ describe('useAdminPosts', () => {
 })
 
 describe('useAdminPost', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 게시글 상세를 반환한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -155,7 +165,9 @@ describe('useAdminPost', () => {
 })
 
 describe('useAdminComments', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 댓글 목록을 반환한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -169,7 +181,9 @@ describe('useAdminComments', () => {
 })
 
 describe('useDeleteAdminUserMutation', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 users 쿼리를 invalidate한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -186,7 +200,9 @@ describe('useDeleteAdminUserMutation', () => {
 })
 
 describe('useDeleteAdminPostMutation', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 posts 쿼리를 invalidate한다', async () => {
     const { adminService } = await import('@/services/adminService')
@@ -203,14 +219,18 @@ describe('useDeleteAdminPostMutation', () => {
 })
 
 describe('useDeleteAdminCommentMutation', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('성공 시 comments 쿼리를 invalidate한다', async () => {
     const { adminService } = await import('@/services/adminService')
     vi.mocked(adminService.deleteComment).mockResolvedValue(undefined)
     mockInvalidateQueries.mockResolvedValue(undefined)
 
-    const { result } = renderHook(() => useDeleteAdminCommentMutation(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useDeleteAdminCommentMutation(), {
+      wrapper: createWrapper(),
+    })
 
     result.current.mutate(1)
 

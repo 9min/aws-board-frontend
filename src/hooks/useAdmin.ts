@@ -1,3 +1,4 @@
+import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminService } from '@/services/adminService'
 import type {
@@ -9,7 +10,6 @@ import type {
   AdminUser,
 } from '@/types/admin'
 import type { AppError } from '@/types/common'
-import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query'
 
 export function useAdminDashboard(): UseQueryResult<AdminDashboardStats, AppError> {
   return useQuery({

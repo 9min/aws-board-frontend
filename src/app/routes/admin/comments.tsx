@@ -37,9 +37,7 @@ function AdminCommentsPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">댓글 관리</h1>
         {data && (
-          <span className="text-sm text-[hsl(var(--muted-foreground))]">
-            총 {data.total}개
-          </span>
+          <span className="text-sm text-[hsl(var(--muted-foreground))]">총 {data.total}개</span>
         )}
       </div>
 
@@ -54,15 +52,13 @@ function AdminCommentsPage() {
       </div>
 
       {isError && (
-        <div className="py-12 text-center text-red-500">
-          댓글 목록을 불러오지 못했습니다.
-        </div>
+        <div className="py-12 text-center text-red-500">댓글 목록을 불러오지 못했습니다.</div>
       )}
 
       {isLoading ? (
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded" />
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Skeleton key={n} className="h-12 rounded" />
           ))}
         </div>
       ) : (

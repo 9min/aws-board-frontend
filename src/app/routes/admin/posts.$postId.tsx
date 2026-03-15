@@ -34,11 +34,7 @@ function AdminPostDetailPage() {
   }
 
   if (isError || !post) {
-    return (
-      <div className="py-12 text-center text-red-500">
-        게시글 정보를 불러오지 못했습니다.
-      </div>
-    )
+    return <div className="py-12 text-center text-red-500">게시글 정보를 불러오지 못했습니다.</div>
   }
 
   return (

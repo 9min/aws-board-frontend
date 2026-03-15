@@ -35,7 +35,12 @@ function TestConsumer() {
       <div data-testid="user">{user?.email ?? 'none'}</div>
       <div data-testid="authenticated">{isAuthenticated ? 'yes' : 'no'}</div>
       <div data-testid="admin">{isAdmin ? 'yes' : 'no'}</div>
-      <button type="button" onClick={() => { login({ accessToken: VALID_TOKEN }).catch(() => undefined) }}>
+      <button
+        type="button"
+        onClick={() => {
+          login({ accessToken: VALID_TOKEN }).catch(() => undefined)
+        }}
+      >
         login
       </button>
       <button type="button" onClick={logout}>

@@ -34,11 +34,7 @@ function AdminUserDetailPage() {
   }
 
   if (isError || !user) {
-    return (
-      <div className="py-12 text-center text-red-500">
-        회원 정보를 불러오지 못했습니다.
-      </div>
-    )
+    return <div className="py-12 text-center text-red-500">회원 정보를 불러오지 못했습니다.</div>
   }
 
   return (
@@ -91,16 +87,22 @@ function AdminUserDetailPage() {
           <div className="flex items-center gap-3">
             <Newspaper className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             <dt className="w-20 text-sm text-[hsl(var(--muted-foreground))]">게시글</dt>
-            <dd className="text-sm font-medium text-[hsl(var(--foreground))]">{user.postCount}개</dd>
+            <dd className="text-sm font-medium text-[hsl(var(--foreground))]">
+              {user.postCount}개
+            </dd>
           </div>
           <div className="flex items-center gap-3">
             <MessageSquare className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             <dt className="w-20 text-sm text-[hsl(var(--muted-foreground))]">댓글</dt>
-            <dd className="text-sm font-medium text-[hsl(var(--foreground))]">{user.commentCount}개</dd>
+            <dd className="text-sm font-medium text-[hsl(var(--foreground))]">
+              {user.commentCount}개
+            </dd>
           </div>
           <div className="flex items-center gap-3">
             <dt className="ml-7 w-20 text-sm text-[hsl(var(--muted-foreground))]">가입일</dt>
-            <dd className="text-sm text-[hsl(var(--muted-foreground))]">{formatDate(user.createdAt)}</dd>
+            <dd className="text-sm text-[hsl(var(--muted-foreground))]">
+              {formatDate(user.createdAt)}
+            </dd>
           </div>
         </dl>
       </div>

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
-import { authService } from '@/services/authService'
 import { tokenStorage } from '@/lib/tokenStorage'
+import { authService } from '@/services/authService'
 import type { AuthUser, LoginResponse } from '@/types/auth'
 
 interface AuthContextType {

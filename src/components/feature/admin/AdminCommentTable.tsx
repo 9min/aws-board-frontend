@@ -8,12 +8,14 @@ interface AdminCommentTableProps {
   isDeleting?: boolean
 }
 
-export function AdminCommentTable({ comments, onDelete, isDeleting = false }: AdminCommentTableProps) {
+export function AdminCommentTable({
+  comments,
+  onDelete,
+  isDeleting = false,
+}: AdminCommentTableProps) {
   if (comments.length === 0) {
     return (
-      <div className="py-12 text-center text-[hsl(var(--muted-foreground))]">
-        댓글이 없습니다.
-      </div>
+      <div className="py-12 text-center text-[hsl(var(--muted-foreground))]">댓글이 없습니다.</div>
     )
   }
 
@@ -22,12 +24,24 @@ export function AdminCommentTable({ comments, onDelete, isDeleting = false }: Ad
       <table className="w-full text-sm">
         <thead className="bg-[hsl(var(--muted))]">
           <tr>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">ID</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">내용</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">작성자</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">게시글</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">작성일</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">작업</th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              ID
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              내용
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              작성자
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              게시글
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              작성일
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              작업
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[hsl(var(--border))] bg-[hsl(var(--card))]">
@@ -41,7 +55,9 @@ export function AdminCommentTable({ comments, onDelete, isDeleting = false }: Ad
               <td className="max-w-[160px] truncate px-4 py-3 text-[hsl(var(--muted-foreground))]">
                 {comment.post.title}
               </td>
-              <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">{formatDate(comment.createdAt)}</td>
+              <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">
+                {formatDate(comment.createdAt)}
+              </td>
               <td className="px-4 py-3">
                 <AdminDeleteButton
                   onConfirm={() => onDelete(comment.id)}

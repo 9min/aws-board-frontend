@@ -22,12 +22,24 @@ export function AdminPostTable({ posts, onDelete, isDeleting = false }: AdminPos
       <table className="w-full text-sm">
         <thead className="bg-[hsl(var(--muted))]">
           <tr>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">ID</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">제목</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">작성자</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">조회수</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">작성일</th>
-            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">작업</th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              ID
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              제목
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              작성자
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              조회수
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              작성일
+            </th>
+            <th className="px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]">
+              작업
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[hsl(var(--border))] bg-[hsl(var(--card))]">
@@ -39,7 +51,9 @@ export function AdminPostTable({ posts, onDelete, isDeleting = false }: AdminPos
               </td>
               <td className="px-4 py-3 text-[hsl(var(--foreground))]">{post.author.nickname}</td>
               <td className="px-4 py-3 text-[hsl(var(--foreground))]">{post.viewCount}</td>
-              <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">{formatDate(post.createdAt)}</td>
+              <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">
+                {formatDate(post.createdAt)}
+              </td>
               <td className="px-4 py-3">
                 <AdminDeleteButton
                   onConfirm={() => onDelete(post.id)}
